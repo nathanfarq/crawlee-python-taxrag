@@ -21,7 +21,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
 
       - name: Install uv package manager
         run: |
@@ -29,9 +36,8 @@ jobs:
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
-        working-directory: ./tax_rag_project
         run: |
-          uv pip install --system -r requirements.txt
+          uv pip install --system -e ".[tax-rag]"
 
       - name: Install Playwright browsers
         run: |
@@ -39,7 +45,7 @@ jobs:
           playwright install-deps chromium
 
       - name: Run daily scraper
-        working-directory: ./tax_rag_project
+        working-directory: .
         env:
           # Qdrant Cloud credentials
           QDRANT_URL: ${{ secrets.QDRANT_URL }}
@@ -56,14 +62,14 @@ jobs:
           # Collection and storage settings
           QDRANT_COLLECTION: tax_documents
           USE_QDRANT: true
-          STORAGE_DIR: ./storage
+          STORAGE_DIR: ./tax_rag_project/storage
 
           # Rate limiting (be respectful)
           MAX_REQUESTS_PER_MINUTE: 60
           MIN_REQUEST_DELAY: 1.0
           MAX_REQUEST_DELAY: 3.0
         run: |
-          python src/tax_rag_scraper/main.py
+          python tax_rag_project/src/tax_rag_scraper/main.py
 
       - name: Upload metrics artifact
         if: always()
