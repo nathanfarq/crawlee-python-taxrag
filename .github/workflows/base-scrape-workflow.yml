@@ -1,4 +1,4 @@
-name: Daily Tax Document Scraper
+name: Base Tax Document Scraper
 
 on:
   # Run daily at 9 AM UTC (4 AM EST, 1 AM PST)
