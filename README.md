@@ -30,14 +30,31 @@ cd tax_rag_project
 cp .env.example .env
 # Edit .env with your Qdrant Cloud and OpenAI credentials
 
-# Run the scraper
+# Run the base scraper
 python src/tax_rag_scraper/main.py
+
+# Run the monthly ITA scraper
+python -m tax_scraper.scrapers.monthly_ita_scraper
 
 # Or run tests
 pytest tax_rag_project/tests/
 ```
 
 For detailed setup instructions, see the [Tax RAG Project README](tax_rag_project/README.md).
+
+### Available Scrapers
+
+This project includes multiple specialized scrapers for different crawling schedules:
+
+- **Base Tax Document Scraper** - Daily lightweight crawl (100 requests, depth 2)
+  - Schedule: Daily at 9 AM UTC
+  - Workflow: ![Base Scraper](https://github.com/YOUR_USERNAME/crawlee-python-taxrag/actions/workflows/base-scrape-workflow.yml/badge.svg)
+
+- **Monthly ITA Scraper** - Comprehensive Income Tax Act crawl (2000 requests, depth 5)
+  - Schedule: 1st of every month at 2 AM UTC
+  - Workflow: ![Monthly ITA](https://github.com/YOUR_USERNAME/crawlee-python-taxrag/actions/workflows/monthly-ita-scraper.yml/badge.svg)
+
+For complete documentation on available scrapers and how to create new ones, see [docs/SCRAPERS.md](docs/SCRAPERS.md).
 
 ---
 

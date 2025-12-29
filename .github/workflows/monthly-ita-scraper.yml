@@ -1,0 +1,90 @@
+name: Monthly ITA Scraper
+
+on:
+  # Run on the 1st of every month at 2 AM UTC
+  schedule:
+    - cron: '0 2 1 * *'
+
+  # Allow manual triggering from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install uv package manager
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system -e ".[tax-rag]"
+
+      - name: Install Playwright browsers
+        run: |
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run monthly ITA scraper
+        working-directory: .
+        env:
+          # Qdrant Cloud credentials
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+
+          # OpenAI API credentials
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+          # Crawler configuration for monthly ITA crawl
+          MAX_REQUESTS_PER_CRAWL: 2000
+          MAX_CONCURRENCY: 3
+          MAX_CRAWL_DEPTH: 5
+
+          # Collection and storage settings
+          QDRANT_COLLECTION: tax_documents
+          USE_QDRANT: true
+          STORAGE_DIR: ./tax_rag_project/storage
+
+          # Rate limiting (be respectful)
+          MAX_REQUESTS_PER_MINUTE: 60
+          MIN_REQUEST_DELAY: 1.0
+          MAX_REQUEST_DELAY: 3.0
+        run: |
+          python -m tax_scraper.scrapers.monthly_ita_scraper
+
+      - name: Upload metrics artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-ita-metrics-${{ github.run_number }}
+          path: tax_rag_project/storage/datasets/*/metrics.jsonl
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Upload crawl results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-ita-results-${{ github.run_number }}
+          path: tax_rag_project/storage/datasets/
+          retention-days: 90
+          if-no-files-found: warn
