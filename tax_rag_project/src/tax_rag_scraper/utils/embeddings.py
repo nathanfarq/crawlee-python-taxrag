@@ -201,19 +201,27 @@ class EmbeddingService:
 
         return []
 
-    async def embed_documents(self, documents: list[dict]) -> list[list[float]]:
-        """Generate embeddings from document dictionaries.
+    async def embed_documents(self, documents: list[dict]) -> list[tuple[str, list[float], dict]]:
+        """Generate embeddings from document dictionaries with chunking support.
 
-        Handles oversized documents by chunking and averaging embeddings.
-        Combines title and content for richer semantic representation.
+        Each document may be split into multiple chunks. Each chunk is returned
+        as a separate item with its embedding and parent document metadata.
+        This enables storing each chunk as a separate vector in Qdrant for
+        better retrieval accuracy in RAG applications.
 
         Args:
             documents: List of document dicts (must have 'title' and 'content' keys).
 
         Returns:
-            List of embedding vectors.
+            List of tuples: (chunk_text, embedding_vector, parent_metadata)
+            where parent_metadata includes:
+                - chunk_index: Position of this chunk (0-indexed)
+                - total_chunks: Total number of chunks from parent document
+                - parent_title: Original document title
+                - parent_url: Original document URL
+                - All other fields from parent document
         """
-        embeddings = []
+        result_chunks = []
 
         for doc in documents:
             title = doc.get('title', '')
@@ -221,25 +229,31 @@ class EmbeddingService:
             full_text = f'Title: {title}\nContent: {content}'
 
             # Check if text needs chunking
-            chunks = self._chunk_text(full_text)
+            text_chunks = self._chunk_text(full_text)
 
-            if len(chunks) == 1:
-                # Single chunk - normal processing
-                chunk_embeddings = await self.embed_texts(chunks)
-                embeddings.append(chunk_embeddings[0])
-            else:
-                # Multiple chunks - generate embedding for each and average
-                logger.warning(f'Document too large ({len(full_text)} chars), splitting into {len(chunks)} chunks')
-                chunk_embeddings = await self.embed_texts(chunks)
+            if len(text_chunks) > 1:
+                logger.info(
+                    f'Document "{title[:50]}..." too large ({len(full_text)} chars), '
+                    f'splitting into {len(text_chunks)} chunks'
+                )
 
-                # Average the embeddings
-                avg_embedding = [
-                    sum(emb[i] for emb in chunk_embeddings) / len(chunk_embeddings)
-                    for i in range(len(chunk_embeddings[0]))
-                ]
-                embeddings.append(avg_embedding)
+            # Generate embeddings for all chunks at once (more efficient)
+            chunk_embeddings = await self.embed_texts(text_chunks)
 
-        return embeddings
+            # Create result tuples with metadata
+            for i, (chunk_text, embedding) in enumerate(zip(text_chunks, chunk_embeddings)):
+                metadata = {
+                    'chunk_index': i,
+                    'total_chunks': len(text_chunks),
+                    'parent_title': title,
+                    'parent_url': doc.get('url', ''),
+                    'parent_source': doc.get('source', ''),
+                    'parent_doc_type': doc.get('doc_type', ''),
+                    'parent_scraped_at': doc.get('scraped_at', ''),
+                }
+                result_chunks.append((chunk_text, embedding, metadata))
+
+        return result_chunks
 
     async def embed_query(self, query: str) -> list[float]:
         """Generate embedding for a single search query.
