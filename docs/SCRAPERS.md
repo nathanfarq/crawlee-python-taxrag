@@ -65,6 +65,60 @@ python -m tax_scraper.scrapers.monthly_ita_scraper
 
 ---
 
+### 3. Monthly CRA Scraper
+**File:** [src/tax_scraper/scrapers/monthly_cra_scraper.py](../src/tax_scraper/scrapers/monthly_cra_scraper.py)
+**Workflow:** [.github/workflows/monthly-cra-scraper.yml](../.github/workflows/monthly-cra-scraper.yml)
+**Schedule:** 1st of every month at 2 AM UTC
+**Purpose:** Comprehensive crawl of CRA forms, guides, and publications
+**Status:** ⚠️ Configuration Pending
+
+**Configuration:**
+- Max Requests: 1000
+- Max Depth: 3
+- Concurrency: 3
+
+**Start URLs:**
+- ⚠️ TODO: Add CRA start URLs for forms, guides, and publications
+
+**Excluded Patterns:**
+- ⚠️ TODO: Add patterns to exclude (PDFs, XML, archived content, etc.)
+
+**Run Locally:**
+```bash
+python -m tax_scraper.scrapers.monthly_cra_scraper
+```
+
+**Note:** This scraper requires configuration before use. Update the `START_URLS`, `ALLOWED_DOMAINS`, and `EXCLUDED_PATTERNS` in the scraper file.
+
+---
+
+### 4. Monthly DoF Scraper
+**File:** [src/tax_scraper/scrapers/monthly_dof_scraper.py](../src/tax_scraper/scrapers/monthly_dof_scraper.py)
+**Workflow:** [.github/workflows/monthly-dof-scraper.yml](../.github/workflows/monthly-dof-scraper.yml)
+**Schedule:** 1st of every month at 2 AM UTC
+**Purpose:** Crawl Department of Finance budgets and draft legislation
+**Status:** ⚠️ Configuration Pending
+
+**Configuration:**
+- Max Requests: 1000
+- Max Depth: 3
+- Concurrency: 3
+
+**Start URLs:**
+- ⚠️ TODO: Add Department of Finance start URLs for budgets and draft legislation
+
+**Excluded Patterns:**
+- ⚠️ TODO: Add patterns to exclude (PDFs, XML, archived content, etc.)
+
+**Run Locally:**
+```bash
+python -m tax_scraper.scrapers.monthly_dof_scraper
+```
+
+**Note:** This scraper requires configuration before use. Update the `START_URLS`, `ALLOWED_DOMAINS`, and `EXCLUDED_PATTERNS` in the scraper file.
+
+---
+
 ## How to Run Scrapers Locally
 
 ### Prerequisites
@@ -85,8 +139,14 @@ python -m tax_scraper.scrapers.monthly_ita_scraper
 Each scraper can be run as a standalone Python module:
 
 ```bash
-# Monthly ITA scraper
+# Monthly ITA scraper (configured)
 python -m tax_scraper.scrapers.monthly_ita_scraper
+
+# Monthly CRA scraper (needs configuration)
+python -m tax_scraper.scrapers.monthly_cra_scraper
+
+# Monthly DoF scraper (needs configuration)
+python -m tax_scraper.scrapers.monthly_dof_scraper
 
 # Base scraper (from main.py)
 python tax_rag_project/src/tax_rag_scraper/main.py
