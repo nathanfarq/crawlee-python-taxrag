@@ -1,10 +1,6 @@
 name: Base Tax Document Scraper
 
 on:
-  # Run daily at 9 AM UTC (4 AM EST, 1 AM PST)
-  schedule:
-    - cron: '0 9 * * *'
-
   # Allow manual triggering from GitHub UI
   workflow_dispatch:
 
