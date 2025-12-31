@@ -69,7 +69,7 @@ jobs:
           MIN_REQUEST_DELAY: 1.0
           MAX_REQUEST_DELAY: 3.0
         run: |
-          python -m tax_scraper.scrapers.monthly_dof_scraper
+          python -m tax_rag_scraper.active-crawlers.monthly_dof_scraper
 
       - name: Upload metrics artifact
         if: always()
