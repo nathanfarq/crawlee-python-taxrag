@@ -1,13 +1,17 @@
-name: Base Tax Document Scraper
+name: Monthly CRA Scraper
 
 on:
+  # Run on the 1st of every month at 2 AM UTC
+  schedule:
+    - cron: '0 2 1 * *'
+
   # Allow manual triggering from GitHub UI
   workflow_dispatch:
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
@@ -40,7 +44,7 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Run daily scraper
+      - name: Run monthly CRA scraper
         working-directory: .
         env:
           # Qdrant Cloud credentials
@@ -50,10 +54,10 @@ jobs:
           # OpenAI API credentials
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-          # Crawler configuration for daily lightweight crawl
-          MAX_REQUESTS_PER_CRAWL: 100
+          # Crawler configuration for monthly CRA crawl
+          MAX_REQUESTS_PER_CRAWL: 5000
           MAX_CONCURRENCY: 3
-          MAX_CRAWL_DEPTH: 2
+          MAX_CRAWL_DEPTH: 5
 
           # Collection and storage settings
           QDRANT_COLLECTION: tax_documents
@@ -65,22 +69,22 @@ jobs:
           MIN_REQUEST_DELAY: 1.0
           MAX_REQUEST_DELAY: 3.0
         run: |
-          python tax_rag_project/src/tax_rag_scraper/main.py
+          python -m tax_rag_scraper.active-crawlers.monthly_cra_scraper
 
       - name: Upload metrics artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: daily-scrape-metrics-${{ github.run_number }}
+          name: monthly-cra-metrics-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/*/metrics.jsonl
-          retention-days: 30
+          retention-days: 90
           if-no-files-found: warn
 
       - name: Upload crawl results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: daily-scrape-results-${{ github.run_number }}
+          name: monthly-cra-results-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/
-          retention-days: 30
+          retention-days: 90
           if-no-files-found: warn

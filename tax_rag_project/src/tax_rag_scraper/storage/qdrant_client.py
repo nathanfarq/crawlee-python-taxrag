@@ -73,33 +73,38 @@ class TaxDataQdrantClient:
             logger.error(f"Error ensuring collection exists: {e}")
             raise
 
-    async def store_documents(self, documents: list[dict[str, Any]], embeddings: list[list[float]]):
-        """Store documents with their embeddings in Qdrant.
+    async def store_documents(self, chunks: list[tuple[str, list[float], dict[str, Any]]]):
+        """Store document chunks with their embeddings in Qdrant.
+
+        Each chunk is stored as a separate point with parent document metadata.
+        This enables better retrieval accuracy for RAG applications.
 
         Args:
-            documents: List of document dictionaries with metadata
-            embeddings: List of embedding vectors (one per document)
+            chunks: List of tuples containing (chunk_text, embedding_vector, parent_metadata)
+                where parent_metadata includes chunk_index, total_chunks, parent_title, etc.
         """
-        if len(documents) != len(embeddings):
-            raise ValueError(f"Document count ({len(documents)}) must match embedding count ({len(embeddings)})")
-
         try:
             points = []
-            for doc, embedding in zip(documents, embeddings):
-                # Generate unique ID for the document
+            for chunk_text, embedding, metadata in chunks:
+                # Generate unique ID for this chunk
                 point_id = str(uuid.uuid4())
 
                 # Create point with embedding and payload
+                # Store both the chunk text and parent document metadata
                 point = PointStruct(
                     id=point_id,
                     vector=embedding,
                     payload={
-                        "title": doc.get("title", ""),
-                        "content": doc.get("content", ""),
-                        "url": doc.get("url", ""),
-                        "source": doc.get("source", ""),
-                        "doc_type": doc.get("doc_type", ""),
-                        "scraped_at": doc.get("scraped_at", ""),
+                        # Chunk-specific fields
+                        "chunk_text": chunk_text,
+                        "chunk_index": metadata.get("chunk_index", 0),
+                        "total_chunks": metadata.get("total_chunks", 1),
+                        # Parent document fields
+                        "title": metadata.get("parent_title", ""),
+                        "url": metadata.get("parent_url", ""),
+                        "source": metadata.get("parent_source", ""),
+                        "doc_type": metadata.get("parent_doc_type", ""),
+                        "scraped_at": metadata.get("parent_scraped_at", ""),
                     },
                 )
                 points.append(point)
@@ -110,10 +115,10 @@ class TaxDataQdrantClient:
                 points=points,
             )
 
-            logger.info(f"✓ Stored {len(points)} documents in Qdrant collection '{self.collection_name}'")
+            logger.info(f"✓ Stored {len(points)} chunks in Qdrant collection '{self.collection_name}'")
 
         except Exception as e:
-            logger.error(f"Error storing documents in Qdrant: {e}")
+            logger.error(f"Error storing chunks in Qdrant: {e}")
             raise
 
     def search(self, query_vector: list[float], limit: int = 5):

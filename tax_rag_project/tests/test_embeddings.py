@@ -185,41 +185,55 @@ class TestEmbeddingService:
         service.client.embeddings.create = AsyncMock(return_value=mock_response)
 
         # Call embed_documents
-        documents = [{'title': 'Test Doc', 'content': 'Test content'}]
-        embeddings = await service.embed_documents(documents)
+        documents = [{'title': 'Test Doc', 'content': 'Test content', 'url': 'http://example.com'}]
+        chunks = await service.embed_documents(documents)
 
-        # Verify results
-        assert len(embeddings) == 1
-        assert len(embeddings[0]) == 1536
+        # Verify results - should return list of tuples
+        assert len(chunks) == 1
+        chunk_text, embedding, metadata = chunks[0]
+        assert isinstance(chunk_text, str)
+        assert len(embedding) == 1536
+        assert metadata['chunk_index'] == 0
+        assert metadata['total_chunks'] == 1
+        assert metadata['parent_title'] == 'Test Doc'
+        assert metadata['parent_url'] == 'http://example.com'
 
     @pytest.mark.asyncio
     async def test_embed_documents_multi_chunk(self) -> None:
         """Test embed_documents with oversized documents requiring chunking"""
         service = EmbeddingService(api_key='test_key')
 
+        # Create oversized document that will be chunked
+        large_content = 'word ' * 10000  # 10000 words (will be split into multiple chunks)
+        documents = [{'title': 'Large Doc', 'content': large_content, 'url': 'http://example.com/large'}]
+
+        # First, determine how many chunks will be created
+        full_text = f"Title: {documents[0]['title']}\nContent: {documents[0]['content']}"
+        text_chunks = service._chunk_text(full_text)
+        num_chunks = len(text_chunks)
+
         # Mock the OpenAI client to return different embeddings for each chunk
-        mock_response_1 = MagicMock()
-        mock_response_1.data = [
-            MagicMock(embedding=[0.1] * 1536),
-            MagicMock(embedding=[0.2] * 1536),
-        ]
-        mock_response_1.usage.total_tokens = 1000
+        mock_response = MagicMock()
+        mock_response.data = [MagicMock(embedding=[float(i) / 10] * 1536) for i in range(num_chunks)]
+        mock_response.usage.total_tokens = 1000
 
-        service.client.embeddings.create = AsyncMock(return_value=mock_response_1)
+        service.client.embeddings.create = AsyncMock(return_value=mock_response)
 
-        # Create oversized document
-        large_content = 'word ' * 10000  # 10000 words (will be split)
-        documents = [{'title': 'Large Doc', 'content': large_content}]
+        chunks = await service.embed_documents(documents)
 
-        embeddings = await service.embed_documents(documents)
+        # Should return multiple chunks (one per text chunk)
+        assert len(chunks) == num_chunks
+        assert num_chunks > 1, "Document should be split into multiple chunks"
 
-        # Should average the chunk embeddings
-        assert len(embeddings) == 1
-        assert len(embeddings[0]) == 1536
-
-        # The averaged embedding should be between the two chunk embeddings
-        # Average of [0.1]*1536 and [0.2]*1536 should be [0.15]*1536
-        assert abs(embeddings[0][0] - 0.15) < 0.01
+        # Verify all chunks have correct structure and metadata
+        for i, (chunk_text, embedding, metadata) in enumerate(chunks):
+            assert isinstance(chunk_text, str)
+            assert len(chunk_text) > 0
+            assert len(embedding) == 1536
+            assert metadata['chunk_index'] == i
+            assert metadata['total_chunks'] == num_chunks
+            assert metadata['parent_title'] == 'Large Doc'
+            assert metadata['parent_url'] == 'http://example.com/large'
 
     @pytest.mark.asyncio
     async def test_embed_query(self) -> None:

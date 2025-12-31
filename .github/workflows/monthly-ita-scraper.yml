@@ -55,7 +55,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
           # Crawler configuration for monthly ITA crawl
-          MAX_REQUESTS_PER_CRAWL: 2000
+          MAX_REQUESTS_PER_CRAWL: 3000
           MAX_CONCURRENCY: 3
           MAX_CRAWL_DEPTH: 5
 
@@ -69,7 +69,7 @@ jobs:
           MIN_REQUEST_DELAY: 1.0
           MAX_REQUEST_DELAY: 3.0
         run: |
-          python -m tax_scraper.scrapers.monthly_ita_scraper
+          python -m tax_rag_scraper.active-crawlers.monthly_ita_scraper
 
       - name: Upload metrics artifact
         if: always()

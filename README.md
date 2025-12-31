@@ -36,6 +36,12 @@ python src/tax_rag_scraper/main.py
 # Run the monthly ITA scraper
 python -m tax_scraper.scrapers.monthly_ita_scraper
 
+# Run the monthly CRA scraper (requires configuration)
+python -m tax_scraper.scrapers.monthly_cra_scraper
+
+# Run the monthly DoF scraper (requires configuration)
+python -m tax_scraper.scrapers.monthly_dof_scraper
+
 # Or run tests
 pytest tax_rag_project/tests/
 ```
@@ -52,7 +58,18 @@ This project includes multiple specialized scrapers for different crawling sched
 
 - **Monthly ITA Scraper** - Comprehensive Income Tax Act crawl (2000 requests, depth 5)
   - Schedule: 1st of every month at 2 AM UTC
+  - Status: ✅ Configured
   - Workflow: ![Monthly ITA](https://github.com/YOUR_USERNAME/crawlee-python-taxrag/actions/workflows/monthly-ita-scraper.yml/badge.svg)
+
+- **Monthly CRA Scraper** - CRA forms, guides, and publications (1000 requests, depth 3)
+  - Schedule: 1st of every month at 2 AM UTC
+  - Status: ⚠️ Configuration Pending
+  - Workflow: ![Monthly CRA](https://github.com/YOUR_USERNAME/crawlee-python-taxrag/actions/workflows/monthly-cra-scraper.yml/badge.svg)
+
+- **Monthly DoF Scraper** - Department of Finance budgets and draft legislation (1000 requests, depth 3)
+  - Schedule: 1st of every month at 2 AM UTC
+  - Status: ⚠️ Configuration Pending
+  - Workflow: ![Monthly DoF](https://github.com/YOUR_USERNAME/crawlee-python-taxrag/actions/workflows/monthly-dof-scraper.yml/badge.svg)
 
 For complete documentation on available scrapers and how to create new ones, see [docs/SCRAPERS.md](docs/SCRAPERS.md).
 

@@ -178,18 +178,21 @@ class TaxDataCrawler:
             await self._flush_batch()
 
     async def _flush_batch(self) -> None:
-        """Flush document batch to Qdrant."""
+        """Flush document batch to Qdrant as chunks."""
         if not self.document_batch:
             return
 
         try:
             logger.info(f'Flushing batch of {len(self.document_batch)} documents to Qdrant')
 
-            # Generate embeddings for all documents in batch
-            embeddings = await self.embedding_service.embed_documents(self.document_batch)
+            # Generate chunks with embeddings and metadata
+            # Returns list of (chunk_text, embedding, metadata) tuples
+            chunks = await self.embedding_service.embed_documents(self.document_batch)
 
-            # Store in Qdrant
-            await self.qdrant_client.store_documents(self.document_batch, embeddings)
+            logger.info(f'Generated {len(chunks)} chunks from {len(self.document_batch)} documents')
+
+            # Store chunks in Qdrant (each chunk becomes a separate point)
+            await self.qdrant_client.store_documents(chunks)
 
             logger.info('✓ Batch flushed successfully')
 
