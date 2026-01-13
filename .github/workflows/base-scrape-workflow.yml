@@ -40,7 +40,7 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Run daily scraper
+      - name: Run base scraper
         working-directory: .
         env:
           # Qdrant Cloud credentials
@@ -50,7 +50,7 @@ jobs:
           # OpenAI API credentials
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-          # Crawler configuration for daily lightweight crawl
+          # Crawler configuration for base lightweight crawl
           MAX_REQUESTS_PER_CRAWL: 100
           MAX_CONCURRENCY: 3
           MAX_CRAWL_DEPTH: 2
@@ -71,7 +71,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: daily-scrape-metrics-${{ github.run_number }}
+          name: base-scrape-metrics-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/*/metrics.jsonl
           retention-days: 30
           if-no-files-found: warn
@@ -80,7 +80,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: daily-scrape-results-${{ github.run_number }}
+          name: base-scrape-results-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/
           retention-days: 30
           if-no-files-found: warn

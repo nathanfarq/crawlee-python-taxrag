@@ -22,16 +22,13 @@ from tax_rag_scraper.crawlers.base_crawler import TaxDataCrawler
 logger = logging.getLogger(__name__)
 
 # ==============================================================================
-# SCRAPER CONFIGURATION (TO BE UPDATED)
+# SCRAPER CONFIGURATION
 # ==============================================================================
 
 # Start URLs for monthly CRA crawl
 START_URLS = [
     'https://www.canada.ca/en/revenue-agency/services/forms-publications.html',
-    'https://www.canada.ca/en/revenue-agency/services/tax/technical-information.html',
-    'https://www.canada.ca/en/revenue-agency/services/forms-publications/publications.html',
-    'https://www.canada.ca/en/revenue-agency/services/forms-publications/current-income-tax-interpretation-bulletins.html',
-    'https://www.canada.ca/en/revenue-agency/services/tax/technical-information/income-tax/income-tax-folios-index.html'
+    'https://www.canada.ca/en/revenue-agency/services/tax/technical-information.html'
 ]
 
 # Allowed domains for this scraper
@@ -47,9 +44,9 @@ EXCLUDED_PATTERNS = [
 
 # Crawl settings for monthly CRA scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 5,
+    'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 5000,
+    'MAX_REQUESTS': 3000,
     'CRAWL_TYPE': 'monthly-cra',
 }
 
