@@ -35,8 +35,8 @@ python tax_rag_project/src/tax_rag_scraper/main.py --max-depth 4
 ---
 
 ### 2. Monthly ITA Scraper
-**File:** [src/tax_scraper/scrapers/monthly_ita_scraper.py](../src/tax_scraper/scrapers/monthly_ita_scraper.py)
-**Workflow:** [.github/workflows/monthly-ita-scraper.yml](../.github/workflows/monthly-ita-scraper.yml)
+**File:** [tax_rag_project/src/tax_rag_scraper/active-crawlers/ita_scraper.py](../tax_rag_project/src/tax_rag_scraper/active-crawlers/ita_scraper.py)
+**Workflow:** [.github/workflows/ita-scraper.yml](../.github/workflows/ita-scraper.yml)
 **Schedule:** 1st of every month at 2 AM UTC
 **Purpose:** Comprehensive crawl of Income Tax Act and regulations
 
@@ -60,14 +60,14 @@ python tax_rag_project/src/tax_rag_scraper/main.py --max-depth 4
 
 **Run Locally:**
 ```bash
-python -m tax_scraper.scrapers.monthly_ita_scraper
+python -m tax_rag_scraper.active-crawlers.ita_scraper
 ```
 
 ---
 
 ### 3. Monthly CRA Scraper
-**File:** [src/tax_scraper/scrapers/monthly_cra_scraper.py](../src/tax_scraper/scrapers/monthly_cra_scraper.py)
-**Workflow:** [.github/workflows/monthly-cra-scraper.yml](../.github/workflows/monthly-cra-scraper.yml)
+**File:** [tax_rag_project/src/tax_rag_scraper/active-crawlers/cra_scraper.py](../tax_rag_project/src/tax_rag_scraper/active-crawlers/cra_scraper.py)
+**Workflow:** [.github/workflows/cra-scraper.yml](../.github/workflows/cra-scraper.yml)
 **Schedule:** 1st of every month at 2 AM UTC
 **Purpose:** Comprehensive crawl of CRA forms, guides, and publications
 **Status:** ⚠️ Configuration Pending
@@ -85,7 +85,7 @@ python -m tax_scraper.scrapers.monthly_ita_scraper
 
 **Run Locally:**
 ```bash
-python -m tax_scraper.scrapers.monthly_cra_scraper
+python -m tax_rag_scraper.active-crawlers.cra_scraper
 ```
 
 **Note:** This scraper requires configuration before use. Update the `START_URLS`, `ALLOWED_DOMAINS`, and `EXCLUDED_PATTERNS` in the scraper file.
@@ -93,8 +93,8 @@ python -m tax_scraper.scrapers.monthly_cra_scraper
 ---
 
 ### 4. Monthly DoF Scraper
-**File:** [src/tax_scraper/scrapers/monthly_dof_scraper.py](../src/tax_scraper/scrapers/monthly_dof_scraper.py)
-**Workflow:** [.github/workflows/monthly-dof-scraper.yml](../.github/workflows/monthly-dof-scraper.yml)
+**File:** [tax_rag_project/src/tax_rag_scraper/active-crawlers/dof_scraper.py](../tax_rag_project/src/tax_rag_scraper/active-crawlers/dof_scraper.py)
+**Workflow:** [.github/workflows/dof-scraper.yml](../.github/workflows/dof-scraper.yml)
 **Schedule:** 1st of every month at 2 AM UTC
 **Purpose:** Crawl Department of Finance budgets and draft legislation
 **Status:** ⚠️ Configuration Pending
@@ -112,7 +112,7 @@ python -m tax_scraper.scrapers.monthly_cra_scraper
 
 **Run Locally:**
 ```bash
-python -m tax_scraper.scrapers.monthly_dof_scraper
+python -m tax_rag_scraper.active-crawlers.dof_scraper
 ```
 
 **Note:** This scraper requires configuration before use. Update the `START_URLS`, `ALLOWED_DOMAINS`, and `EXCLUDED_PATTERNS` in the scraper file.
@@ -140,13 +140,13 @@ Each scraper can be run as a standalone Python module:
 
 ```bash
 # Monthly ITA scraper (configured)
-python -m tax_scraper.scrapers.monthly_ita_scraper
+python -m tax_rag_scraper.active-crawlers.ita_scraper
 
 # Monthly CRA scraper (needs configuration)
-python -m tax_scraper.scrapers.monthly_cra_scraper
+python -m tax_rag_scraper.active-crawlers.cra_scraper
 
 # Monthly DoF scraper (needs configuration)
-python -m tax_scraper.scrapers.monthly_dof_scraper
+python -m tax_rag_scraper.active-crawlers.dof_scraper
 
 # Base scraper (from main.py)
 python tax_rag_project/src/tax_rag_scraper/main.py
@@ -160,7 +160,7 @@ Follow these steps to create a new scraper based on the monthly ITA template:
 
 ### Step 1: Copy the Template
 ```bash
-cp src/tax_scraper/scrapers/monthly_ita_scraper.py src/tax_scraper/scrapers/your_scraper_name.py
+cp tax_rag_project/src/tax_rag_scraper/active-crawlers/ita_scraper.py tax_rag_project/src/tax_rag_scraper/active-crawlers/your_scraper_name.py
 ```
 
 ### Step 2: Update Configuration
@@ -201,13 +201,13 @@ CRAWL_CONFIG = {
 Copy the workflow template:
 
 ```bash
-cp .github/workflows/monthly-ita-scraper.yml .github/workflows/your-scraper-name.yml
+cp .github/workflows/ita-scraper.yml .github/workflows/your-scraper-name.yml
 ```
 
 Update these fields in the new workflow:
 - `name:` - Workflow display name
 - `schedule:` - Cron expression for when to run
-- Job step: `python -m tax_scraper.scrapers.your_scraper_name`
+- Job step: `python -m tax_rag_scraper.active-crawlers.your_scraper_name`
 - Environment variables if needed
 - Artifact names
 
@@ -219,7 +219,7 @@ Update these fields in the new workflow:
 
 ### Step 4: Test Locally
 ```bash
-python -m tax_scraper.scrapers.your_scraper_name
+python -m tax_rag_scraper.active-crawlers.your_scraper_name
 ```
 
 ### Step 5: Update Documentation

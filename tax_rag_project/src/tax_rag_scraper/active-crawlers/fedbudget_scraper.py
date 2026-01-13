@@ -1,10 +1,10 @@
-"""Monthly ITA scraper for Canadian Income Tax Act and regulations.
+"""Federal Budget Scraper.
 
-This scraper crawls Income Tax Act and regulations on a monthly basis.
+This scraper crawls federal budget documents.
 It's designed to be self-contained and easily replicable for other scrapers.
 
 Usage:
-    python -m tax_scraper.scrapers.monthly_ita_scraper
+    python -m tax_rag_scraper.active-crawlers.fedbudget_scraper
 """
 
 import asyncio
@@ -22,36 +22,33 @@ from tax_rag_scraper.crawlers.base_crawler import TaxDataCrawler
 logger = logging.getLogger(__name__)
 
 # ==============================================================================
-# SCRAPER CONFIGURATION
+# SCRAPER CONFIGURATION (TO BE UPDATED)
 # ==============================================================================
 
-# Start URLs for monthly ITA crawl
+# Start URLs for Federal Budget crawl
 START_URLS = [
-    'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/index.html'
+    'https://budget.canada.ca/2025/report-rapport/toc-tdm-en.html',
+    'https://budget.canada.ca/2024/report-rapport/toc-tdm-en.html'
 ]
 
 # Allowed domains for this scraper
 ALLOWED_DOMAINS = [
-    'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/**',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/**'
+    'https://budget.canada.ca/2025/report-rapport/**',
+    'https://budget.canada.ca/2024/report-rapport/**'
 ]
 
-# URL patterns to exclude (PDFs, XML, FullText pages, etc.)
+# URL patterns to exclude (PDFs, XML, archived pages, etc.)
 EXCLUDED_PATTERNS = [
-    'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/FullText.html',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/FullText.html',
-    'https://laws-lois.justice.gc.ca/**.xml',
-    'https://laws-lois.justice.gc.ca/**.pdf',
-    'https://laws-lois.justice.gc.ca/**/PITIndex.html'
+    'https://budget.canada.ca/**.pdf',
+    'https://budget.canada.ca/**.xml'
 ]
 
-# Crawl settings for monthly ITA scraper
+# Crawl settings for Federal Budget scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 5,
+    'MAX_DEPTH': 2,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 3000,
-    'CRAWL_TYPE': 'monthly-ita',
+    'MAX_REQUESTS': 1000,
+    'CRAWL_TYPE': 'fedbudget',
 }
 
 # ==============================================================================
@@ -60,7 +57,7 @@ CRAWL_CONFIG = {
 
 
 async def main() -> None:
-    """Run the monthly ITA scraper."""
+    """Run the Federal Budget scraper."""
     # Load environment variables
     env_path = Path(__file__).parent.parent.parent.parent / 'tax_rag_project' / '.env'
     if env_path.exists():
@@ -101,14 +98,21 @@ async def main() -> None:
     logger.info('[OK] Qdrant Cloud URL: %s', qdrant_url)
     logger.info('[OK] OpenAI API key configured')
 
-    # Configure settings with monthly scraper overrides
+    # Validate configuration
+    if not START_URLS or START_URLS[0].startswith('https://example.com'):
+        logger.error('\n[ERROR] START_URLS not configured')
+        logger.error('\nPlease update the START_URLS in fedbudget_scraper.py')
+        logger.error('Add the target URLs for federal budget resources')
+        sys.exit(1)
+
+    # Configure settings with scraper overrides
     settings = Settings()
     settings.MAX_CRAWL_DEPTH = CRAWL_CONFIG['MAX_DEPTH']
     settings.MAX_CONCURRENCY = CRAWL_CONFIG['MAX_CONCURRENCY']
     settings.MAX_REQUESTS_PER_CRAWL = CRAWL_CONFIG['MAX_REQUESTS']
 
-    logger.info('\n[INFO] Starting Monthly ITA Scraper')
-    logger.info('[INFO] Target: Canadian Income Tax Act & Regulations')
+    logger.info('\n[INFO] Starting Federal Budget Scraper')
+    logger.info('[INFO] Target: Federal Budget Resources')
     logger.info('[INFO] Collection: %s', settings.QDRANT_COLLECTION)
     logger.info('[INFO] Max requests: %d', settings.MAX_REQUESTS_PER_CRAWL)
     logger.info('[INFO] Max depth: %d', settings.MAX_CRAWL_DEPTH)
@@ -130,7 +134,7 @@ async def main() -> None:
     # Run the crawler
     await crawler.run(START_URLS, crawl_type=CRAWL_CONFIG['CRAWL_TYPE'])
 
-    logger.info('\n[OK] Monthly ITA scraper complete.')
+    logger.info('\n[OK] Federal Budget scraper complete.')
     logger.info('[OK] Check storage/datasets/default/ for results.')
     logger.info('[OK] View your data in Qdrant Cloud: https://cloud.qdrant.io')
 
