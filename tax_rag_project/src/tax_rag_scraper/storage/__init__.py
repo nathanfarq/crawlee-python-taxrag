@@ -2,4 +2,4 @@
 
 from tax_rag_scraper.storage.qdrant_client import TaxDataQdrantClient
 
-__all__ = ["TaxDataQdrantClient"]
+__all__ = ['TaxDataQdrantClient']

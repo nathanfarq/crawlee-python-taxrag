@@ -28,13 +28,13 @@ logger = logging.getLogger(__name__)
 # Start URLs for ETA crawl
 START_URLS = [
     'https://laws-lois.justice.gc.ca/eng/acts/E-15/',
-    'https://laws-lois.justice.gc.ca/eng/acts/E-14.1/index.html'
+    'https://laws-lois.justice.gc.ca/eng/acts/E-14.1/index.html',
 ]
 
 # Allowed domains for this scraper
 ALLOWED_DOMAINS = [
     'https://laws-lois.justice.gc.ca/eng/acts/E-15/**',
-    'https://laws-lois.justice.gc.ca/eng/acts/E-14.1/**'
+    'https://laws-lois.justice.gc.ca/eng/acts/E-14.1/**',
 ]
 
 # URL patterns to exclude (PDFs, XML, FullText pages, etc.)
@@ -43,7 +43,7 @@ EXCLUDED_PATTERNS = [
     'https://laws-lois.justice.gc.ca/eng/acts/E-14.1/FullText.html',
     'https://laws-lois.justice.gc.ca/**.xml',
     'https://laws-lois.justice.gc.ca/**.pdf',
-    'https://laws-lois.justice.gc.ca/**/PITIndex.html'
+    'https://laws-lois.justice.gc.ca/**/PITIndex.html',
 ]
 
 # Crawl settings for ETA scraper

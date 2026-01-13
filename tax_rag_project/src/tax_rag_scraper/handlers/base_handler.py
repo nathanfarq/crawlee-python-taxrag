@@ -41,9 +41,7 @@ class BaseHandler:
             return None  # noqa: TRY300
 
         except Exception:
-            context.log.exception(
-                f'Error processing {context.request.url}\n{traceback.format_exc()}'
-            )
+            context.log.exception(f'Error processing {context.request.url}\n{traceback.format_exc()}')
             # Re-raise to trigger Crawlee's retry mechanism
             raise
 

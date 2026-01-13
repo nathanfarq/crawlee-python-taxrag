@@ -26,16 +26,10 @@ logger = logging.getLogger(__name__)
 # ==============================================================================
 
 # Start URLs for TaxLaw crawl
-START_URLS = [
-    'https://www.mcgill.ca/tax-law/research/scc',
-    'https://www.canlii.org/ca/tcc'
-]
+START_URLS = ['https://www.mcgill.ca/tax-law/research/scc', 'https://www.canlii.org/ca/tcc']
 
 # Allowed domains for this scraper
-ALLOWED_DOMAINS = [
-    'https://www.canlii.org/en/ca/scc/**',
-    'https://www.canlii.org/ca/tcc/**'
-]
+ALLOWED_DOMAINS = ['https://www.canlii.org/en/ca/scc/**', 'https://www.canlii.org/ca/tcc/**']
 
 # URL patterns to exclude (PDFs, XML, archived pages, etc.)
 EXCLUDED_PATTERNS = [

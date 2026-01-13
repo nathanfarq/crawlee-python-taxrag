@@ -35,13 +35,11 @@ START_URLS = [
 ALLOWED_DOMAINS = [
     'https://www.canada.ca/en/department-finance/programs/tax-policy/**',
     'https://www.canada.ca/en/department-finance/corporate/laws-regulations/**',
-    'https://fin.canada.ca/drleg-apl/**'
+    'https://fin.canada.ca/drleg-apl/**',
 ]
 
 # URL patterns to exclude (PDFs, XML, archived pages, etc.)
-EXCLUDED_PATTERNS = [
-    'https://www.canada.ca/en/services/**'
-]
+EXCLUDED_PATTERNS = ['https://www.canada.ca/en/services/**']
 
 # Crawl settings for Department of Finance scraper
 CRAWL_CONFIG = {

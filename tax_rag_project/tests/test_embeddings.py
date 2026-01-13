@@ -208,7 +208,7 @@ class TestEmbeddingService:
         documents = [{'title': 'Large Doc', 'content': large_content, 'url': 'http://example.com/large'}]
 
         # First, determine how many chunks will be created
-        full_text = f"Title: {documents[0]['title']}\nContent: {documents[0]['content']}"
+        full_text = f'Title: {documents[0]["title"]}\nContent: {documents[0]["content"]}'
         text_chunks = service._chunk_text(full_text)
         num_chunks = len(text_chunks)
 
@@ -223,7 +223,7 @@ class TestEmbeddingService:
 
         # Should return multiple chunks (one per text chunk)
         assert len(chunks) == num_chunks
-        assert num_chunks > 1, "Document should be split into multiple chunks"
+        assert num_chunks > 1, 'Document should be split into multiple chunks'
 
         # Verify all chunks have correct structure and metadata
         for i, (chunk_text, embedding, metadata) in enumerate(chunks):

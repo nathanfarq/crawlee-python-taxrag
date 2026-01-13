@@ -28,13 +28,13 @@ logger = logging.getLogger(__name__)
 # Start URLs for ITA crawl
 START_URLS = [
     'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/index.html'
+    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/index.html',
 ]
 
 # Allowed domains for this scraper
 ALLOWED_DOMAINS = [
     'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/**',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/**'
+    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/**',
 ]
 
 # URL patterns to exclude (PDFs, XML, FullText pages, etc.)
@@ -43,7 +43,7 @@ EXCLUDED_PATTERNS = [
     'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/FullText.html',
     'https://laws-lois.justice.gc.ca/**.xml',
     'https://laws-lois.justice.gc.ca/**.pdf',
-    'https://laws-lois.justice.gc.ca/**/PITIndex.html'
+    'https://laws-lois.justice.gc.ca/**/PITIndex.html',
 ]
 
 # Crawl settings for ITA scraper

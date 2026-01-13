@@ -28,20 +28,14 @@ logger = logging.getLogger(__name__)
 # Start URLs for Federal Budget crawl
 START_URLS = [
     'https://budget.canada.ca/2025/report-rapport/toc-tdm-en.html',
-    'https://budget.canada.ca/2024/report-rapport/toc-tdm-en.html'
+    'https://budget.canada.ca/2024/report-rapport/toc-tdm-en.html',
 ]
 
 # Allowed domains for this scraper
-ALLOWED_DOMAINS = [
-    'https://budget.canada.ca/2025/report-rapport/**',
-    'https://budget.canada.ca/2024/report-rapport/**'
-]
+ALLOWED_DOMAINS = ['https://budget.canada.ca/2025/report-rapport/**', 'https://budget.canada.ca/2024/report-rapport/**']
 
 # URL patterns to exclude (PDFs, XML, archived pages, etc.)
-EXCLUDED_PATTERNS = [
-    'https://budget.canada.ca/**.pdf',
-    'https://budget.canada.ca/**.xml'
-]
+EXCLUDED_PATTERNS = ['https://budget.canada.ca/**.pdf', 'https://budget.canada.ca/**.xml']
 
 # Crawl settings for Federal Budget scraper
 CRAWL_CONFIG = {

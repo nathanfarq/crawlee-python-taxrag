@@ -30,9 +30,7 @@ class SiteRouter:
         """Create a concrete default handler for unknown sites."""
 
         class DefaultExtractor(BaseHandler):
-            async def _extract_data(
-                self, context: 'BeautifulSoupCrawlingContext'
-            ) -> TaxDocument | None:
+            async def _extract_data(self, context: 'BeautifulSoupCrawlingContext') -> TaxDocument | None:
                 # Basic extraction for any site
                 soup = context.soup
                 title = soup.title.string if soup.title else 'No title'

@@ -241,7 +241,7 @@ class EmbeddingService:
             chunk_embeddings = await self.embed_texts(text_chunks)
 
             # Create result tuples with metadata
-            for i, (chunk_text, embedding) in enumerate(zip(text_chunks, chunk_embeddings)):
+            for i, (chunk_text, embedding) in enumerate(zip(text_chunks, chunk_embeddings, strict=True)):
                 metadata = {
                     'chunk_index': i,
                     'total_chunks': len(text_chunks),

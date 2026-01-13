@@ -24,9 +24,9 @@ class TaxDataQdrantClient:
         self,
         url: str,
         api_key: str,
-        collection_name: str = "tax_documents",
+        collection_name: str = 'tax_documents',
         vector_size: int = 1536,
-    ):
+    ) -> None:
         """Initialize Qdrant Cloud client.
 
         Args:
@@ -49,7 +49,7 @@ class TaxDataQdrantClient:
         # Create collection if it doesn't exist
         self._ensure_collection_exists()
 
-    def _ensure_collection_exists(self):
+    def _ensure_collection_exists(self) -> None:
         """Create collection if it doesn't exist."""
         try:
             # Check if collection exists
@@ -69,11 +69,11 @@ class TaxDataQdrantClient:
             else:
                 logger.info(f"✓ Collection '{self.collection_name}' already exists")
 
-        except Exception as e:
-            logger.error(f"Error ensuring collection exists: {e}")
+        except Exception:
+            logger.exception('Error ensuring collection exists')
             raise
 
-    async def store_documents(self, chunks: list[tuple[str, list[float], dict[str, Any]]]):
+    async def store_documents(self, chunks: list[tuple[str, list[float], dict[str, Any]]]) -> None:
         """Store document chunks with their embeddings in Qdrant.
 
         Each chunk is stored as a separate point with parent document metadata.
@@ -96,15 +96,15 @@ class TaxDataQdrantClient:
                     vector=embedding,
                     payload={
                         # Chunk-specific fields
-                        "chunk_text": chunk_text,
-                        "chunk_index": metadata.get("chunk_index", 0),
-                        "total_chunks": metadata.get("total_chunks", 1),
+                        'chunk_text': chunk_text,
+                        'chunk_index': metadata.get('chunk_index', 0),
+                        'total_chunks': metadata.get('total_chunks', 1),
                         # Parent document fields
-                        "title": metadata.get("parent_title", ""),
-                        "url": metadata.get("parent_url", ""),
-                        "source": metadata.get("parent_source", ""),
-                        "doc_type": metadata.get("parent_doc_type", ""),
-                        "scraped_at": metadata.get("parent_scraped_at", ""),
+                        'title': metadata.get('parent_title', ''),
+                        'url': metadata.get('parent_url', ''),
+                        'source': metadata.get('parent_source', ''),
+                        'doc_type': metadata.get('parent_doc_type', ''),
+                        'scraped_at': metadata.get('parent_scraped_at', ''),
                     },
                 )
                 points.append(point)
@@ -117,11 +117,11 @@ class TaxDataQdrantClient:
 
             logger.info(f"✓ Stored {len(points)} chunks in Qdrant collection '{self.collection_name}'")
 
-        except Exception as e:
-            logger.error(f"Error storing chunks in Qdrant: {e}")
+        except Exception:
+            logger.exception('Error storing chunks in Qdrant')
             raise
 
-    def search(self, query_vector: list[float], limit: int = 5):
+    def search(self, query_vector: list[float], limit: int = 5) -> list[Any]:
         """Search for similar documents using a query vector.
 
         Args:
@@ -138,11 +138,11 @@ class TaxDataQdrantClient:
                 query=query_vector,
                 limit=limit,
             )
-            return results.points
-
-        except Exception as e:
-            logger.error(f"Error searching Qdrant: {e}")
+        except Exception:
+            logger.exception('Error searching Qdrant')
             raise
+        else:
+            return results.points
 
     def count_documents(self) -> int:
         """Count total documents in the collection.
@@ -152,13 +152,13 @@ class TaxDataQdrantClient:
         """
         try:
             collection_info = self.client.get_collection(collection_name=self.collection_name)
+        except Exception:
+            logger.exception('Error counting documents')
+            return 0
+        else:
             return collection_info.points_count or 0
 
-        except Exception as e:
-            logger.error(f"Error counting documents: {e}")
-            return 0
-
-    def delete_collection(self):
+    def delete_collection(self) -> None:
         """Delete the entire collection.
 
         Warning: This permanently deletes all documents in the collection.
@@ -167,8 +167,8 @@ class TaxDataQdrantClient:
             self.client.delete_collection(collection_name=self.collection_name)
             logger.info(f"✓ Collection '{self.collection_name}' deleted")
 
-        except Exception as e:
-            logger.error(f"Error deleting collection: {e}")
+        except Exception:
+            logger.exception('Error deleting collection')
             raise
 
     def get_collection_info(self) -> dict[str, Any]:
@@ -179,13 +179,13 @@ class TaxDataQdrantClient:
         """
         try:
             info = self.client.get_collection(collection_name=self.collection_name)
-            return {
-                "name": self.collection_name,
-                "points_count": info.points_count,
-                "vector_size": info.config.params.vectors.size,
-                "distance": info.config.params.vectors.distance,
-            }
-
-        except Exception as e:
-            logger.error(f"Error getting collection info: {e}")
+        except Exception:
+            logger.exception('Error getting collection info')
             raise
+        else:
+            return {
+                'name': self.collection_name,
+                'points_count': info.points_count,
+                'vector_size': info.config.params.vectors.size,
+                'distance': info.config.params.vectors.distance,
+            }
