@@ -1,9 +1,9 @@
-name: Monthly ITA Scraper
+name: ITA Scraper
 
 on:
   # Run on the 1st of every month at 2 AM UTC
-  schedule:
-    - cron: '0 2 1 * *'
+  # schedule:
+  #   - cron: '0 2 1 * *'
 
   # Allow manual triggering from GitHub UI
   workflow_dispatch:
@@ -44,7 +44,7 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Run monthly ITA scraper
+      - name: Run ITA scraper
         working-directory: .
         env:
           # Qdrant Cloud credentials
@@ -54,7 +54,7 @@ jobs:
           # OpenAI API credentials
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-          # Crawler configuration for monthly ITA crawl
+          # Crawler configuration for ITA crawl
           MAX_REQUESTS_PER_CRAWL: 3000
           MAX_CONCURRENCY: 3
           MAX_CRAWL_DEPTH: 5
@@ -69,13 +69,13 @@ jobs:
           MIN_REQUEST_DELAY: 1.0
           MAX_REQUEST_DELAY: 3.0
         run: |
-          python -m tax_rag_scraper.active-crawlers.monthly_ita_scraper
+          python -m tax_rag_scraper.active-crawlers.ita_scraper
 
       - name: Upload metrics artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: monthly-ita-metrics-${{ github.run_number }}
+          name: ita-scrape-metrics-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/*/metrics.jsonl
           retention-days: 90
           if-no-files-found: warn
@@ -84,7 +84,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: monthly-ita-results-${{ github.run_number }}
+          name: ita-scrape-results-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/
           retention-days: 90
           if-no-files-found: warn

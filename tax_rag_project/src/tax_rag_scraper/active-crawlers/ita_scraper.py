@@ -1,10 +1,10 @@
-"""Monthly ITA scraper for Canadian Income Tax Act and regulations.
+"""ITA scraper for Canadian Income Tax Act and regulations.
 
-This scraper crawls Income Tax Act and regulations on a monthly basis.
+This scraper crawls Income Tax Act and regulations.
 It's designed to be self-contained and easily replicable for other scrapers.
 
 Usage:
-    python -m tax_scraper.scrapers.monthly_ita_scraper
+    python -m tax_rag_scraper.active-crawlers.ita_scraper
 """
 
 import asyncio
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # SCRAPER CONFIGURATION
 # ==============================================================================
 
-# Start URLs for monthly ITA crawl
+# Start URLs for ITA crawl
 START_URLS = [
     'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/',
     'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/index.html'
@@ -46,12 +46,12 @@ EXCLUDED_PATTERNS = [
     'https://laws-lois.justice.gc.ca/**/PITIndex.html'
 ]
 
-# Crawl settings for monthly ITA scraper
+# Crawl settings for ITA scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 5,
     'MAX_CONCURRENCY': 3,
     'MAX_REQUESTS': 3000,
-    'CRAWL_TYPE': 'monthly-ita',
+    'CRAWL_TYPE': 'ita',
 }
 
 # ==============================================================================
@@ -60,7 +60,7 @@ CRAWL_CONFIG = {
 
 
 async def main() -> None:
-    """Run the monthly ITA scraper."""
+    """Run the ITA scraper."""
     # Load environment variables
     env_path = Path(__file__).parent.parent.parent.parent / 'tax_rag_project' / '.env'
     if env_path.exists():
@@ -101,13 +101,13 @@ async def main() -> None:
     logger.info('[OK] Qdrant Cloud URL: %s', qdrant_url)
     logger.info('[OK] OpenAI API key configured')
 
-    # Configure settings with monthly scraper overrides
+    # Configure settings with scraper overrides
     settings = Settings()
     settings.MAX_CRAWL_DEPTH = CRAWL_CONFIG['MAX_DEPTH']
     settings.MAX_CONCURRENCY = CRAWL_CONFIG['MAX_CONCURRENCY']
     settings.MAX_REQUESTS_PER_CRAWL = CRAWL_CONFIG['MAX_REQUESTS']
 
-    logger.info('\n[INFO] Starting Monthly ITA Scraper')
+    logger.info('\n[INFO] Starting ITA Scraper')
     logger.info('[INFO] Target: Canadian Income Tax Act & Regulations')
     logger.info('[INFO] Collection: %s', settings.QDRANT_COLLECTION)
     logger.info('[INFO] Max requests: %d', settings.MAX_REQUESTS_PER_CRAWL)
@@ -130,7 +130,7 @@ async def main() -> None:
     # Run the crawler
     await crawler.run(START_URLS, crawl_type=CRAWL_CONFIG['CRAWL_TYPE'])
 
-    logger.info('\n[OK] Monthly ITA scraper complete.')
+    logger.info('\n[OK] ITA scraper complete.')
     logger.info('[OK] Check storage/datasets/default/ for results.')
     logger.info('[OK] View your data in Qdrant Cloud: https://cloud.qdrant.io')
 

@@ -1,10 +1,10 @@
-"""CRA Forms and Publications Scraper.
+"""Tax Law Scraper.
 
-This scraper crawls CRA forms, guides, and publications on a basis.
+This scraper crawls tax law resources.
 It's designed to be self-contained and easily replicable for other scrapers.
 
 Usage:
-    python -m tax_rag_scraper.active-crawlers.cra_scraper
+    python -m tax_rag_scraper.active-crawlers.taxlaw_scraper
 """
 
 import asyncio
@@ -22,32 +22,32 @@ from tax_rag_scraper.crawlers.base_crawler import TaxDataCrawler
 logger = logging.getLogger(__name__)
 
 # ==============================================================================
-# SCRAPER CONFIGURATION
+# SCRAPER CONFIGURATION (TO BE UPDATED)
 # ==============================================================================
 
-# Start URLs for CRA crawl
+# Start URLs for TaxLaw crawl
 START_URLS = [
-    'https://www.canada.ca/en/revenue-agency/services/forms-publications.html',
-    'https://www.canada.ca/en/revenue-agency/services/tax/technical-information.html'
+    'https://www.mcgill.ca/tax-law/research/scc',
+    'https://www.canlii.org/ca/tcc'
 ]
 
 # Allowed domains for this scraper
 ALLOWED_DOMAINS = [
-    'https://www.canada.ca/en/revenue-agency/services/tax/technical-information/**',
-    'https://www.canada.ca/en/revenue-agency/services/forms-publications/**',
+    'https://www.canlii.org/en/ca/scc/**',
+    'https://www.canlii.org/ca/tcc/**'
 ]
 
-# URL patterns to exclude (PDFs, XML, FullText pages, etc.)
+# URL patterns to exclude (PDFs, XML, archived pages, etc.)
 EXCLUDED_PATTERNS = [
-    # Add patterns to exclude
+    # Excluded URLs
 ]
 
-# Crawl settings for CRA scraper
+# Crawl settings for TaxLaw scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 3,
+    'MAX_DEPTH': 2,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 3000,
-    'CRAWL_TYPE': 'cra',
+    'MAX_REQUESTS': 1000,
+    'CRAWL_TYPE': 'taxlaw',
 }
 
 # ==============================================================================
@@ -56,7 +56,7 @@ CRAWL_CONFIG = {
 
 
 async def main() -> None:
-    """Run the CRA scraper."""
+    """Run the TaxLaw scraper."""
     # Load environment variables
     env_path = Path(__file__).parent.parent.parent.parent / 'tax_rag_project' / '.env'
     if env_path.exists():
@@ -98,10 +98,10 @@ async def main() -> None:
     logger.info('[OK] OpenAI API key configured')
 
     # Validate configuration
-    if not START_URLS:
+    if not START_URLS or START_URLS[0].startswith('https://example.com'):
         logger.error('\n[ERROR] START_URLS not configured')
-        logger.error('\nPlease update the START_URLS in cra_scraper.py')
-        logger.error('Add the target URLs for CRA forms, guides, and publications')
+        logger.error('\nPlease update the START_URLS in taxlaw_scraper.py')
+        logger.error('Add the target URLs for tax law resources')
         sys.exit(1)
 
     # Configure settings with scraper overrides
@@ -110,8 +110,8 @@ async def main() -> None:
     settings.MAX_CONCURRENCY = CRAWL_CONFIG['MAX_CONCURRENCY']
     settings.MAX_REQUESTS_PER_CRAWL = CRAWL_CONFIG['MAX_REQUESTS']
 
-    logger.info('\n[INFO] Starting CRA Scraper')
-    logger.info('[INFO] Target: CRA Forms, Guides & Publications')
+    logger.info('\n[INFO] Starting TaxLaw Scraper')
+    logger.info('[INFO] Target: Tax Law Resources')
     logger.info('[INFO] Collection: %s', settings.QDRANT_COLLECTION)
     logger.info('[INFO] Max requests: %d', settings.MAX_REQUESTS_PER_CRAWL)
     logger.info('[INFO] Max depth: %d', settings.MAX_CRAWL_DEPTH)
@@ -133,7 +133,7 @@ async def main() -> None:
     # Run the crawler
     await crawler.run(START_URLS, crawl_type=CRAWL_CONFIG['CRAWL_TYPE'])
 
-    logger.info('\n[OK] CRA scraper complete.')
+    logger.info('\n[OK] TaxLaw scraper complete.')
     logger.info('[OK] Check storage/datasets/default/ for results.')
     logger.info('[OK] View your data in Qdrant Cloud: https://cloud.qdrant.io')
 

@@ -1,10 +1,10 @@
-"""Monthly Department of Finance Scraper.
+"""Department of Finance Scraper.
 
-This scraper crawls Department of Finance budgets and draft legislation on a monthly basis.
+This scraper crawls Department of Finance budgets and draft legislation.
 It's designed to be self-contained and easily replicable for other scrapers.
 
 Usage:
-    python -m tax_scraper.scrapers.monthly_dof_scraper
+    python -m tax_rag_scraper.active-crawlers.dof_scraper
 """
 
 import asyncio
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # SCRAPER CONFIGURATION (TO BE UPDATED)
 # ==============================================================================
 
-# Start URLs for monthly Department of Finance crawl
+# Start URLs for Department of Finance crawl
 START_URLS = [
     'https://www.canada.ca/en/department-finance/programs/tax-policy.html',
     'https://www.canada.ca/en/department-finance/corporate/laws-regulations.html',
@@ -43,12 +43,12 @@ EXCLUDED_PATTERNS = [
     'https://www.canada.ca/en/services/**'
 ]
 
-# Crawl settings for monthly Department of Finance scraper
+# Crawl settings for Department of Finance scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
     'MAX_REQUESTS': 1000,
-    'CRAWL_TYPE': 'monthly-dof',
+    'CRAWL_TYPE': 'dof',
 }
 
 # ==============================================================================
@@ -57,7 +57,7 @@ CRAWL_CONFIG = {
 
 
 async def main() -> None:
-    """Run the monthly Department of Finance scraper."""
+    """Run the Department of Finance scraper."""
     # Load environment variables
     env_path = Path(__file__).parent.parent.parent.parent / 'tax_rag_project' / '.env'
     if env_path.exists():
@@ -101,17 +101,17 @@ async def main() -> None:
     # Validate configuration
     if not START_URLS:
         logger.error('\n[ERROR] START_URLS not configured')
-        logger.error('\nPlease update the START_URLS in monthly_dof_scraper.py')
+        logger.error('\nPlease update the START_URLS in dof_scraper.py')
         logger.error('Add the target URLs for Department of Finance budgets and draft legislation')
         sys.exit(1)
 
-    # Configure settings with monthly scraper overrides
+    # Configure settings with scraper overrides
     settings = Settings()
     settings.MAX_CRAWL_DEPTH = CRAWL_CONFIG['MAX_DEPTH']
     settings.MAX_CONCURRENCY = CRAWL_CONFIG['MAX_CONCURRENCY']
     settings.MAX_REQUESTS_PER_CRAWL = CRAWL_CONFIG['MAX_REQUESTS']
 
-    logger.info('\n[INFO] Starting Monthly Department of Finance Scraper')
+    logger.info('\n[INFO] Starting Department of Finance Scraper')
     logger.info('[INFO] Target: Budgets & Draft Legislation')
     logger.info('[INFO] Collection: %s', settings.QDRANT_COLLECTION)
     logger.info('[INFO] Max requests: %d', settings.MAX_REQUESTS_PER_CRAWL)
@@ -134,7 +134,7 @@ async def main() -> None:
     # Run the crawler
     await crawler.run(START_URLS, crawl_type=CRAWL_CONFIG['CRAWL_TYPE'])
 
-    logger.info('\n[OK] Monthly Department of Finance scraper complete.')
+    logger.info('\n[OK] Department of Finance scraper complete.')
     logger.info('[OK] Check storage/datasets/default/ for results.')
     logger.info('[OK] View your data in Qdrant Cloud: https://cloud.qdrant.io')
 
