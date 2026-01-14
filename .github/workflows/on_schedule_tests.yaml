@@ -21,11 +21,13 @@ jobs:
     name: End-to-end tests
     strategy:
       fail-fast: false
-      max-parallel: 12
+      # Reduced to 1 to prevent exceeding Apify free tier memory limits (8GB total)
+      max-parallel: 1
       matrix:
         crawler-type: ["playwright_camoufox", "playwright", "parsel", "beautifulsoup"]
         http-client: [ "httpx", "curl_impersonate"]
-        package-manager: ["pip", "uv", "poetry"]
+        # Reduced to only test with uv to minimize test time and API usage (8 tests instead of 24)
+        package-manager: ["uv"]
 
     runs-on: "ubuntu-latest"
 
