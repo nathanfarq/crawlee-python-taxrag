@@ -60,7 +60,7 @@ jobs:
           MAX_CRAWL_DEPTH: 3
 
           # Collection and storage settings
-          QDRANT_COLLECTION: dof_documents
+          QDRANT_COLLECTION: tax_documents
           USE_QDRANT: true
           STORAGE_DIR: ./tax_rag_project/storage
 
