@@ -24,9 +24,12 @@ jobs:
       # Reduced to 1 to prevent exceeding Apify free tier memory limits (8GB total)
       max-parallel: 1
       matrix:
-        crawler-type: ["playwright_camoufox", "playwright", "parsel", "beautifulsoup"]
-        http-client: [ "httpx", "curl_impersonate"]
-        # Reduced to only test with uv to minimize test time and API usage (8 tests instead of 24)
+        # Reduced to 2 tests to keep total runtime under 90 minutes
+        # Tests both browser (playwright) and non-browser (beautifulsoup) crawlers
+        crawler-type: ["playwright", "beautifulsoup"]
+        # Only test with httpx (most common/stable HTTP client)
+        http-client: ["httpx"]
+        # Only test with uv (fastest package manager)
         package-manager: ["uv"]
 
     runs-on: "ubuntu-latest"

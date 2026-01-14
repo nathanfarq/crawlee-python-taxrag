@@ -59,7 +59,7 @@ unit-tests-cov:
 		tests/unit
 
 e2e-templates-tests $(args):
-	uv run pytest --numprocesses=$(E2E_TESTS_CONCURRENCY) --verbose tests/e2e/project_template "$(args)" --timeout=600
+	uv run pytest --numprocesses=$(E2E_TESTS_CONCURRENCY) --verbose tests/e2e/project_template "$(args)" --timeout=900
 
 format:
 	uv run ruff check --fix

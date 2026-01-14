@@ -98,9 +98,9 @@ async def test_static_crawler_actor_at_apify(
     # Run actor
     try:
         assert build_process.returncode == 0
-        # Reduced memory allocation to fit within free tier limits (8GB total)
-        # 256MB is sufficient for simple crawl tests with 10 requests
-        started_run_data = await actor.start(memory_mbytes=256)
+        # Increased to 1024MB to support Playwright browser crawlers
+        # Still within free tier limits (8GB total) when running sequentially
+        started_run_data = await actor.start(memory_mbytes=1024)
         actor_run = client.run(started_run_data['id'])
 
         finished_run_data = await actor_run.wait_for_finish()
