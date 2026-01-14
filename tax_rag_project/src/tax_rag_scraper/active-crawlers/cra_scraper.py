@@ -39,7 +39,7 @@ ALLOWED_DOMAINS = [
 
 # URL patterns to exclude (PDFs, XML, FullText pages, etc.)
 EXCLUDED_PATTERNS = [
-    # Add patterns to exclude
+    'https://www.canada.ca/en/services/**',
 ]
 
 # Crawl settings for CRA scraper
