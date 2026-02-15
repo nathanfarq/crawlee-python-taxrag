@@ -1,11 +1,11 @@
-"""Qdrant Cloud client for storing tax documentation with vector embeddings."""
+"""Qdrant Cloud client for storing tax documentation with hybrid vector embeddings."""
 
 import logging
 import uuid
 from typing import Any
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
+from qdrant_client.models import PointStruct, Prefetch, SparseVector
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +14,9 @@ class TaxDataQdrantClient:
     """Client for interacting with Qdrant Cloud vector database.
 
     This client handles:
-    - Collection creation and management
-    - Document storage with vector embeddings
-    - Similarity search
+    - Collection validation (collections must be created manually in Qdrant UI)
+    - Document storage with hybrid (dense + sparse) named vectors
+    - Hybrid similarity search
     - Document counting and deletion
     """
 
@@ -24,7 +24,8 @@ class TaxDataQdrantClient:
         self,
         url: str,
         api_key: str,
-        collection_name: str = 'tax_documents',
+        collection_name: str,
+        source: str,
         vector_size: int = 1536,
     ) -> None:
         """Initialize Qdrant Cloud client.
@@ -32,13 +33,17 @@ class TaxDataQdrantClient:
         Args:
             url: Qdrant Cloud URL (e.g., 'https://xyz.cloud.qdrant.io')
             api_key: API key for authentication
-            collection_name: Name of the collection to use
-            vector_size: Dimension of embedding vectors (default: 1536 for OpenAI text-embedding-3-small)
+            collection_name: Name of the collection (e.g., 'cra-collection')
+            source: Source prefix for named vectors (e.g., 'cra' -> 'cra-dense', 'cra-sparse')
+            vector_size: Dimension of dense embedding vectors (default: 1536 for OpenAI text-embedding-3-small)
         """
         self.url = url
         self.api_key = api_key
         self.collection_name = collection_name
+        self.source = source
         self.vector_size = vector_size
+        self.dense_vector_name = f'{source}-dense'
+        self.sparse_vector_name = f'{source}-sparse'
 
         # Initialize Qdrant client
         self.client = QdrantClient(
@@ -46,60 +51,64 @@ class TaxDataQdrantClient:
             api_key=api_key,
         )
 
-        # Create collection if it doesn't exist
-        self._ensure_collection_exists()
+        # Validate that collection exists (must be created manually in Qdrant UI)
+        self._validate_collection_exists()
 
-    def _ensure_collection_exists(self) -> None:
-        """Create collection if it doesn't exist."""
+    def _validate_collection_exists(self) -> None:
+        """Validate that the collection exists in Qdrant Cloud.
+
+        Collections must be created manually in the Qdrant UI with the required
+        vector configuration before running scrapers.
+
+        Raises:
+            RuntimeError: If the collection does not exist.
+        """
         try:
-            # Check if collection exists
             collections = self.client.get_collections().collections
             collection_names = [c.name for c in collections]
 
             if self.collection_name not in collection_names:
-                logger.info(f"Creating collection '{self.collection_name}' with vector size {self.vector_size}")
-                self.client.create_collection(
-                    collection_name=self.collection_name,
-                    vectors_config=VectorParams(
-                        size=self.vector_size,
-                        distance=Distance.COSINE,
-                    ),
+                raise RuntimeError(
+                    f"Collection '{self.collection_name}' does not exist in Qdrant Cloud.\n"
+                    f"\n"
+                    f"Please create it manually in the Qdrant UI (https://cloud.qdrant.io) with:\n"
+                    f"  - Dense vector: '{self.dense_vector_name}' (size={self.vector_size}, distance=Cosine)\n"
+                    f"  - Sparse vector: '{self.sparse_vector_name}'\n"
                 )
-                logger.info(f"✓ Collection '{self.collection_name}' created successfully")
-            else:
-                logger.info(f"✓ Collection '{self.collection_name}' already exists")
 
+            logger.info(f"Collection '{self.collection_name}' validated successfully")
+
+        except RuntimeError:
+            raise
         except Exception:
-            logger.exception('Error ensuring collection exists')
+            logger.exception('Error validating collection exists')
             raise
 
-    async def store_documents(self, chunks: list[tuple[str, list[float], dict[str, Any]]]) -> None:
-        """Store document chunks with their embeddings in Qdrant.
+    async def store_documents(
+        self, chunks: list[tuple[str, list[float], SparseVector, dict[str, Any]]]
+    ) -> None:
+        """Store document chunks with hybrid embeddings in Qdrant.
 
-        Each chunk is stored as a separate point with parent document metadata.
-        This enables better retrieval accuracy for RAG applications.
+        Each chunk is stored as a separate point with dense and sparse vectors.
 
         Args:
-            chunks: List of tuples containing (chunk_text, embedding_vector, parent_metadata)
-                where parent_metadata includes chunk_index, total_chunks, parent_title, etc.
+            chunks: List of tuples containing (chunk_text, dense_embedding, sparse_embedding, metadata)
         """
         try:
             points = []
-            for chunk_text, embedding, metadata in chunks:
-                # Generate unique ID for this chunk
+            for chunk_text, dense_embedding, sparse_embedding, metadata in chunks:
                 point_id = str(uuid.uuid4())
 
-                # Create point with embedding and payload
-                # Store both the chunk text and parent document metadata
                 point = PointStruct(
                     id=point_id,
-                    vector=embedding,
+                    vector={
+                        self.dense_vector_name: dense_embedding,
+                        self.sparse_vector_name: sparse_embedding,
+                    },
                     payload={
-                        # Chunk-specific fields
                         'chunk_text': chunk_text,
                         'chunk_index': metadata.get('chunk_index', 0),
                         'total_chunks': metadata.get('total_chunks', 1),
-                        # Parent document fields
                         'title': metadata.get('parent_title', ''),
                         'url': metadata.get('parent_url', ''),
                         'source': metadata.get('parent_source', ''),
@@ -109,35 +118,62 @@ class TaxDataQdrantClient:
                 )
                 points.append(point)
 
-            # Upload points to Qdrant
             self.client.upsert(
                 collection_name=self.collection_name,
                 points=points,
             )
 
-            logger.info(f"✓ Stored {len(points)} chunks in Qdrant collection '{self.collection_name}'")
+            logger.info(f"Stored {len(points)} chunks in '{self.collection_name}'")
 
         except Exception:
             logger.exception('Error storing chunks in Qdrant')
             raise
 
-    def search(self, query_vector: list[float], limit: int = 5) -> list[Any]:
-        """Search for similar documents using a query vector.
+    def search(
+        self,
+        query_vector: list[float],
+        sparse_vector: SparseVector | None = None,
+        limit: int = 5,
+    ) -> list[Any]:
+        """Search for similar documents using hybrid search.
 
         Args:
-            query_vector: Embedding vector for the search query
+            query_vector: Dense embedding vector for the search query
+            sparse_vector: Sparse embedding vector for keyword matching
             limit: Maximum number of results to return
 
         Returns:
             List of search results with scores and payloads
         """
         try:
-            # Updated to use query_points() which is the correct method name
-            results = self.client.query_points(
-                collection_name=self.collection_name,
-                query=query_vector,
-                limit=limit,
-            )
+            if sparse_vector:
+                # Hybrid search with prefetch
+                results = self.client.query_points(
+                    collection_name=self.collection_name,
+                    prefetch=[
+                        Prefetch(
+                            query=query_vector,
+                            using=self.dense_vector_name,
+                            limit=limit * 2,
+                        ),
+                        Prefetch(
+                            query=sparse_vector,
+                            using=self.sparse_vector_name,
+                            limit=limit * 2,
+                        ),
+                    ],
+                    query=query_vector,
+                    using=self.dense_vector_name,
+                    limit=limit,
+                )
+            else:
+                # Dense-only fallback
+                results = self.client.query_points(
+                    collection_name=self.collection_name,
+                    query=query_vector,
+                    using=self.dense_vector_name,
+                    limit=limit,
+                )
         except Exception:
             logger.exception('Error searching Qdrant')
             raise
@@ -145,11 +181,7 @@ class TaxDataQdrantClient:
             return results.points
 
     def count_documents(self) -> int:
-        """Count total documents in the collection.
-
-        Returns:
-            Number of documents in the collection
-        """
+        """Count total documents in the collection."""
         try:
             collection_info = self.client.get_collection(collection_name=self.collection_name)
         except Exception:
@@ -165,18 +197,13 @@ class TaxDataQdrantClient:
         """
         try:
             self.client.delete_collection(collection_name=self.collection_name)
-            logger.info(f"✓ Collection '{self.collection_name}' deleted")
-
+            logger.info(f"Collection '{self.collection_name}' deleted")
         except Exception:
             logger.exception('Error deleting collection')
             raise
 
     def get_collection_info(self) -> dict[str, Any]:
-        """Get information about the collection.
-
-        Returns:
-            Dictionary with collection metadata
-        """
+        """Get information about the collection."""
         try:
             info = self.client.get_collection(collection_name=self.collection_name)
         except Exception:
@@ -185,7 +212,8 @@ class TaxDataQdrantClient:
         else:
             return {
                 'name': self.collection_name,
+                'source': self.source,
                 'points_count': info.points_count,
-                'vector_size': info.config.params.vectors.size,
-                'distance': info.config.params.vectors.distance,
+                'dense_vector_name': self.dense_vector_name,
+                'sparse_vector_name': self.sparse_vector_name,
             }

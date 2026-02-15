@@ -354,6 +354,48 @@ def test_integration_realistic_document() -> None:
         assert any(word in second_chunk_start for word in first_chunk_end.split()[:50])
 
 
+class TestIntegrationRealisticDocument:
+    """Integration test with realistic document."""
+
+    @pytest.mark.asyncio
+    async def test_embed_documents_new_metadata_fields(self) -> None:
+        """Test that new metadata fields are properly preserved: parent_source, parent_doc_type, parent_scraped_at."""
+        service = EmbeddingService(api_key='test_key')
+
+        # Mock OpenAI client
+        mock_response = MagicMock()
+        mock_response.data = [MagicMock(embedding=[0.1] * 1536)]
+        mock_response.usage.total_tokens = 50
+        service.client.embeddings.create = AsyncMock(return_value=mock_response)
+
+        # Document with all new metadata fields
+        documents = [{
+            'title': 'Tax Deduction Guide',
+            'content': 'Information about tax deductions for individuals.',
+            'url': 'https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/about-your-tax-return/tax-return/completing-a-tax-return/deductions-credits-expenses/deductions-credits-expenses.html',
+            'source': 'CRA',
+            'doc_type': 'CRA_Guide',
+            'scraped_at': '2024-01-15T10:30:00Z',
+        }]
+
+        chunks = await service.embed_documents(documents)
+
+        # Verify new metadata fields are preserved
+        assert len(chunks) == 1
+        _, _, metadata = chunks[0]
+
+        # Check all new metadata fields
+        assert metadata['parent_source'] == 'CRA', "parent_source should be preserved"
+        assert metadata['parent_doc_type'] == 'CRA_Guide', "parent_doc_type should be preserved"
+        assert metadata['parent_scraped_at'] == '2024-01-15T10:30:00Z', "parent_scraped_at should be preserved"
+
+        # Also verify existing metadata fields still work
+        assert metadata['parent_title'] == 'Tax Deduction Guide'
+        assert 'canada.ca' in metadata['parent_url']
+        assert metadata['chunk_index'] == 0
+        assert metadata['total_chunks'] == 1
+
+
 if __name__ == '__main__':
     # Run tests
     pytest.main([__file__, '-v', '-s'])
