@@ -37,7 +37,8 @@ class Settings(BaseSettings):
     # Get credentials at https://cloud.qdrant.io
     QDRANT_URL: str = ''  # Required when USE_QDRANT is True: https://your-cluster.cloud.qdrant.io
     QDRANT_API_KEY: str = ''  # Required when USE_QDRANT is True: Your Qdrant Cloud API key
-    QDRANT_COLLECTION: str = 'tax_documents'
+    QDRANT_COLLECTION: str = ''  # Required: set per-scraper (e.g., 'cra-collection')
+    QDRANT_SOURCE: str = ''  # Required: source prefix for vector names (e.g., 'cra' -> 'cra-dense', 'cra-sparse')
     USE_QDRANT: bool = True
 
     # Embeddings configuration

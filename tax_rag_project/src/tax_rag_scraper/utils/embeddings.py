@@ -2,7 +2,9 @@ import asyncio
 import logging
 import os
 
+from fastembed import SparseTextEmbedding
 from openai import AsyncOpenAI
+from qdrant_client.models import SparseVector
 
 logger = logging.getLogger(__name__)
 
@@ -266,3 +268,52 @@ class EmbeddingService:
         """
         embeddings = await self.embed_texts([query])
         return embeddings[0] if embeddings else []
+
+
+class SparseEmbeddingService:
+    """Service for generating sparse text embeddings using Fastembed SPLADE models."""
+
+    def __init__(self, model_name: str = 'prithivida/Splade_PP_en_v1') -> None:
+        """Initialize sparse embedding service.
+
+        Args:
+            model_name: Fastembed sparse model name.
+        """
+        self.model_name = model_name
+        self.model = SparseTextEmbedding(model_name=model_name)
+        logger.info(f'Initialized sparse embeddings: {self.model_name}')
+
+    def embed_texts(self, texts: list[str]) -> list[SparseVector]:
+        """Generate sparse embeddings for a list of texts.
+
+        Args:
+            texts: List of text strings to embed.
+
+        Returns:
+            List of SparseVector objects.
+        """
+        if not texts:
+            return []
+
+        results = list(self.model.embed(texts))
+        sparse_vectors = [
+            SparseVector(
+                indices=result.indices.tolist(),
+                values=result.values.tolist(),
+            )
+            for result in results
+        ]
+        logger.info(f'Generated {len(sparse_vectors)} sparse embeddings')
+        return sparse_vectors
+
+    def embed_query(self, query: str) -> SparseVector:
+        """Generate sparse embedding for a single search query.
+
+        Args:
+            query: Search query string.
+
+        Returns:
+            Single SparseVector.
+        """
+        vectors = self.embed_texts([query])
+        return vectors[0] if vectors else SparseVector(indices=[], values=[])

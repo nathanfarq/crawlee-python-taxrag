@@ -11,7 +11,7 @@ from crawlee.http_clients import HttpxHttpClient
 from tax_rag_scraper.config.settings import Settings
 from tax_rag_scraper.crawlers.site_router import SiteRouter
 from tax_rag_scraper.storage.qdrant_client import TaxDataQdrantClient
-from tax_rag_scraper.utils.embeddings import EmbeddingService
+from tax_rag_scraper.utils.embeddings import EmbeddingService, SparseEmbeddingService
 from tax_rag_scraper.utils.link_extractor import LinkExtractor
 from tax_rag_scraper.utils.robots import RobotsChecker
 from tax_rag_scraper.utils.stats_tracker import CrawlStats
@@ -66,20 +66,29 @@ class TaxDataCrawler:
                     'Get credentials at https://cloud.qdrant.io'
                 )
 
+            if not self.settings.QDRANT_COLLECTION or not self.settings.QDRANT_SOURCE:
+                raise ValueError(
+                    'QDRANT_COLLECTION and QDRANT_SOURCE must be set. '
+                    'Each scraper must specify its own collection and source prefix.'
+                )
+
             logger.info('Initializing Qdrant Cloud integration...')
             self.qdrant_client = TaxDataQdrantClient(
                 url=qdrant_url,
                 api_key=qdrant_api_key,
                 collection_name=self.settings.QDRANT_COLLECTION,
+                source=self.settings.QDRANT_SOURCE,
                 vector_size=1536,
             )
             self.embedding_service = EmbeddingService(
                 model_name=self.settings.EMBEDDING_MODEL, api_key=self.settings.OPENAI_API_KEY
             )
+            self.sparse_embedding_service = SparseEmbeddingService()
             logger.info('✓ Qdrant Cloud integration ready')
         else:
             self.qdrant_client = None
             self.embedding_service = None
+            self.sparse_embedding_service = None
 
         # Batch storage for efficiency (NEW)
         self.document_batch = []
@@ -178,21 +187,33 @@ class TaxDataCrawler:
             await self._flush_batch()
 
     async def _flush_batch(self) -> None:
-        """Flush document batch to Qdrant as chunks."""
+        """Flush document batch to Qdrant as hybrid (dense + sparse) chunks."""
         if not self.document_batch:
             return
 
         try:
             logger.info(f'Flushing batch of {len(self.document_batch)} documents to Qdrant')
 
-            # Generate chunks with embeddings and metadata
-            # Returns list of (chunk_text, embedding, metadata) tuples
-            chunks = await self.embedding_service.embed_documents(self.document_batch)
+            # Generate chunks with dense embeddings and metadata
+            # Returns list of (chunk_text, dense_embedding, metadata) tuples
+            dense_chunks = await self.embedding_service.embed_documents(self.document_batch)
 
-            logger.info(f'Generated {len(chunks)} chunks from {len(self.document_batch)} documents')
+            logger.info(f'Generated {len(dense_chunks)} chunks from {len(self.document_batch)} documents')
 
-            # Store chunks in Qdrant (each chunk becomes a separate point)
-            await self.qdrant_client.store_documents(chunks)
+            # Generate sparse embeddings for all chunk texts
+            chunk_texts = [chunk_text for chunk_text, _, _ in dense_chunks]
+            sparse_vectors = self.sparse_embedding_service.embed_texts(chunk_texts)
+
+            # Combine into 4-tuples: (chunk_text, dense_embedding, sparse_embedding, metadata)
+            hybrid_chunks = [
+                (chunk_text, dense_emb, sparse_emb, metadata)
+                for (chunk_text, dense_emb, metadata), sparse_emb in zip(
+                    dense_chunks, sparse_vectors, strict=True
+                )
+            ]
+
+            # Store hybrid chunks in Qdrant
+            await self.qdrant_client.store_documents(hybrid_chunks)
 
             logger.info('✓ Batch flushed successfully')
 
@@ -202,7 +223,6 @@ class TaxDataCrawler:
         except Exception:
             logger.exception('Error flushing batch')
             # Don't re-raise - we don't want to stop the crawler
-            # Documents are still saved to filesystem
 
     async def run(self, start_urls: list[str], crawl_type: str = 'standard') -> None:
         """Run the crawler with the given start URLs.

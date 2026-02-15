@@ -58,6 +58,8 @@ CRAWL_CONFIG = {
     'MAX_CONCURRENCY': 3,
     'MAX_REQUESTS': 3000,
     'CRAWL_TYPE': 'provtax',
+    'COLLECTION': 'provtax-collection',
+    'SOURCE': 'provtax',
 }
 
 # ==============================================================================
@@ -119,6 +121,8 @@ async def main() -> None:
     settings.MAX_CRAWL_DEPTH = CRAWL_CONFIG['MAX_DEPTH']
     settings.MAX_CONCURRENCY = CRAWL_CONFIG['MAX_CONCURRENCY']
     settings.MAX_REQUESTS_PER_CRAWL = CRAWL_CONFIG['MAX_REQUESTS']
+    settings.QDRANT_COLLECTION = CRAWL_CONFIG['COLLECTION']
+    settings.QDRANT_SOURCE = CRAWL_CONFIG['SOURCE']
 
     logger.info('\n[INFO] Starting Provincial Tax Scraper')
     logger.info('[INFO] Target: Provincial Tax Resources')

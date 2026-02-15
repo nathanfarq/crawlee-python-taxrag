@@ -47,6 +47,8 @@ CRAWL_CONFIG = {
     'MAX_CONCURRENCY': 3,
     'MAX_REQUESTS': 1000,
     'CRAWL_TYPE': 'dof',
+    'COLLECTION': 'dof-collection',
+    'SOURCE': 'dof',
 }
 
 # ==============================================================================
@@ -108,6 +110,8 @@ async def main() -> None:
     settings.MAX_CRAWL_DEPTH = CRAWL_CONFIG['MAX_DEPTH']
     settings.MAX_CONCURRENCY = CRAWL_CONFIG['MAX_CONCURRENCY']
     settings.MAX_REQUESTS_PER_CRAWL = CRAWL_CONFIG['MAX_REQUESTS']
+    settings.QDRANT_COLLECTION = CRAWL_CONFIG['COLLECTION']
+    settings.QDRANT_SOURCE = CRAWL_CONFIG['SOURCE']
 
     logger.info('\n[INFO] Starting Department of Finance Scraper')
     logger.info('[INFO] Target: Budgets & Draft Legislation')

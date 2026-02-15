@@ -56,7 +56,8 @@ jobs:
           MAX_CRAWL_DEPTH: 2
 
           # Collection and storage settings
-          QDRANT_COLLECTION: tax_documents
+          QDRANT_COLLECTION: cra-collection
+          QDRANT_SOURCE: cra
           USE_QDRANT: true
           STORAGE_DIR: ./tax_rag_project/storage
 
