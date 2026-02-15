@@ -260,6 +260,7 @@ exclude = [
     "docs/guides/code_examples/storage_clients/custom_storage_client_example.py",
 ]
 files = ["src", "tests", "docs", "website"]
+mypy_path = "tax_rag_project/src"
 check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_calls = true
@@ -302,7 +303,8 @@ disable_error_code = ["misc"]
 [tool.basedpyright]
 pythonVersion = "3.10"
 typeCheckingMode = "standard"
-include = ["src", "tests", "docs", "website"]
+include = ["src", "tests", "docs", "website", "tax_rag_project"]
+extraPaths = ["tax_rag_project/src"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "assert_never()"]
