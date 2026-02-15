@@ -5,7 +5,7 @@ import uuid
 from typing import Any
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct, SparseVector
+from qdrant_client.models import PointStruct, Prefetch, SparseVector
 
 logger = logging.getLogger(__name__)
 
@@ -151,16 +151,16 @@ class TaxDataQdrantClient:
                 results = self.client.query_points(
                     collection_name=self.collection_name,
                     prefetch=[
-                        {
-                            'query': query_vector,
-                            'using': self.dense_vector_name,
-                            'limit': limit * 2,
-                        },
-                        {
-                            'query': sparse_vector,
-                            'using': self.sparse_vector_name,
-                            'limit': limit * 2,
-                        },
+                        Prefetch(
+                            query=query_vector,
+                            using=self.dense_vector_name,
+                            limit=limit * 2,
+                        ),
+                        Prefetch(
+                            query=sparse_vector,
+                            using=self.sparse_vector_name,
+                            limit=limit * 2,
+                        ),
                     ],
                     query=query_vector,
                     using=self.dense_vector_name,

@@ -3,8 +3,9 @@
 import logging
 from datetime import timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
+from crawlee import Request
 from crawlee._autoscaling.autoscaled_pool import ConcurrencySettings
 from crawlee.crawlers import BeautifulSoupCrawler
 from crawlee.http_clients import HttpxHttpClient
@@ -18,7 +19,7 @@ from tax_rag_scraper.utils.stats_tracker import CrawlStats
 from tax_rag_scraper.utils.user_agents import get_random_user_agent
 
 if TYPE_CHECKING:
-    from crawlee.beautifulsoup_crawler import BeautifulSoupCrawlingContext
+    from crawlee.crawlers import BeautifulSoupCrawlingContext
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ class TaxDataCrawler:
                     # Add to Qdrant batch if enabled (NEW)
                     if self.use_qdrant:
                         # Convert TaxDocument to dict for batching
-                        doc_dict = result.model_dump() if hasattr(result, 'model_dump') else result
+                        doc_dict = result.model_dump() if hasattr(result, 'model_dump') else cast(dict[str, Any], result)
                         await self._store_document(doc_dict)
                 else:
                     self.stats.record_failure()
@@ -159,7 +160,7 @@ class TaxDataCrawler:
                 raise
 
             # Extract and enqueue links for deep crawling (NEW)
-            current_depth = context.request.user_data.get('depth', 0)
+            current_depth = cast(int, context.request.user_data.get('depth', 0))
 
             if current_depth < self.link_extractor.max_depth:
                 context.log.info(f'Extracting links from depth {current_depth}')
@@ -168,10 +169,14 @@ class TaxDataCrawler:
 
                 context.log.info(f'Found {len(links)} valid links at depth {current_depth}')
 
-                # Enqueue discovered links
-                await context.add_requests(list(links), user_data={'depth': current_depth + 1})
+                # Enqueue discovered links with depth tracking
+                requests = [
+                    Request.from_url(link, user_data={'depth': current_depth + 1})
+                    for link in links
+                ]
+                await context.add_requests(requests)
 
-    async def _store_document(self, doc_data: dict) -> None:
+    async def _store_document(self, doc_data: dict[str, Any]) -> None:
         """Store document (batch for Qdrant, immediate for filesystem).
 
         Args:
@@ -190,6 +195,11 @@ class TaxDataCrawler:
         """Flush document batch to Qdrant as hybrid (dense + sparse) chunks."""
         if not self.document_batch:
             return
+
+        # Type narrowing: these are guaranteed to be set when use_qdrant is True
+        assert self.embedding_service is not None
+        assert self.sparse_embedding_service is not None
+        assert self.qdrant_client is not None
 
         try:
             logger.info(f'Flushing batch of {len(self.document_batch)} documents to Qdrant')
