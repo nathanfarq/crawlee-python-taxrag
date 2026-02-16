@@ -27,7 +27,11 @@ logger = logging.getLogger(__name__)
 
 # Start URLs for Tax Comment crawl
 START_URLS = [
-    'https://example.com/TODO-replace-with-actual-url',
+    'https://www.pwc.com/ca/en/services/tax/publications/tax-insights.html',
+    'https://kpmg.com/ca/en/home/services/tax/tax-news-flash-canada.html',
+    'https://www.doanegrantthornton.ca/insights/?tags=tax-services',
+    'https://www.millerthomson.com/en/insights/?contentType=Tax&page=1',
+    'https://financesofthenation.ca/articles/'
 ]
 
 # Allowed domains for this scraper
