@@ -1,4 +1,4 @@
-name: CRA Scraper
+name: Tax Comment Scraper
 
 on:
   # Run on the 1st of every month at 2 AM UTC
@@ -11,7 +11,7 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repository
@@ -44,7 +44,7 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Run CRA scraper
+      - name: Run Tax Comment scraper
         working-directory: .
         env:
           # Qdrant Cloud credentials
@@ -54,14 +54,14 @@ jobs:
           # OpenAI API credentials
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-          # Crawler configuration for CRA crawl
-          MAX_REQUESTS_PER_CRAWL: 5000
+          # Crawler configuration for Tax Comment crawl
+          MAX_REQUESTS_PER_CRAWL: 1000
           MAX_CONCURRENCY: 3
-          MAX_CRAWL_DEPTH: 3
+          MAX_CRAWL_DEPTH: 2
 
           # Collection and storage settings
-          QDRANT_COLLECTION: cra-collection
-          QDRANT_SOURCE: cra
+          QDRANT_COLLECTION: taxcomment-collection
+          QDRANT_SOURCE: taxcomment
           USE_QDRANT: true
           STORAGE_DIR: ./tax_rag_project/storage
 
@@ -70,13 +70,13 @@ jobs:
           MIN_REQUEST_DELAY: 1.0
           MAX_REQUEST_DELAY: 3.0
         run: |
-          python -m tax_rag_scraper.active-crawlers.cra_scraper
+          python -m tax_rag_scraper.active-crawlers.taxcomment_scraper
 
       - name: Upload metrics artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cra-scrape-metrics-${{ github.run_number }}
+          name: taxcomment-scrape-metrics-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/*/metrics.jsonl
           retention-days: 90
           if-no-files-found: warn
@@ -85,7 +85,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cra-scrape-results-${{ github.run_number }}
+          name: taxcomment-scrape-results-${{ github.run_number }}
           path: tax_rag_project/storage/datasets/
           retention-days: 90
           if-no-files-found: warn
