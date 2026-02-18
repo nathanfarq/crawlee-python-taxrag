@@ -50,7 +50,7 @@ EXCLUDED_PATTERNS = [
 CRAWL_CONFIG = {
     'MAX_DEPTH': 5,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 3000,
+    'MAX_REQUESTS': 5000,
     'CRAWL_TYPE': 'ita',
     'COLLECTION': 'ita-collection',
     'SOURCE': 'ita',

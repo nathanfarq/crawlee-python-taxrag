@@ -54,9 +54,9 @@ EXCLUDED_PATTERNS = [
 
 # Crawl settings for Provincial Tax scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 2,
+    'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 3000,
+    'MAX_REQUESTS': 5000,
     'CRAWL_TYPE': 'provtax',
     'COLLECTION': 'provtax-collection',
     'SOURCE': 'provtax',

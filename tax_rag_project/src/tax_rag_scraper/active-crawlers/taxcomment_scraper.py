@@ -30,21 +30,30 @@ START_URLS = [
     'https://www.pwc.com/ca/en/services/tax/publications/tax-insights.html',
     'https://kpmg.com/ca/en/home/services/tax/tax-news-flash-canada.html',
     'https://www.doanegrantthornton.ca/insights/?tags=tax-services',
-    'https://www.millerthomson.com/en/insights/?contentType=Tax&page=1',
-    'https://financesofthenation.ca/articles/'
+    'https://www.millerthomson.com/en/insights/corporate-tax/',
+    'https://www.millerthomson.com/en/insights/?page=1&expertise_filter=1887',
+    'https://financesofthenation.ca/articles/',
 ]
 
 # Allowed domains for this scraper
-ALLOWED_DOMAINS = ['https://example.com/TODO-replace/**']
+ALLOWED_DOMAINS = [
+    'https://www.pwc.com/ca/en/services/tax/publications/tax-insights/**',
+    'https://kpmg.com/ca/en/home/insights/**',
+    'https://www.doanegrantthornton.ca/insights/**',
+    'https://www.millerthomson.com/en/insights/**',
+    'https://financesofthenation.ca/**',
+]
 
 # URL patterns to exclude (PDFs, XML, archived pages, etc.)
-EXCLUDED_PATTERNS = ['https://example.com/**.pdf', 'https://example.com/**.xml']
+EXCLUDED_PATTERNS = [
+    # Excluded URLs
+]
 
 # Crawl settings for Tax Comment scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 2,
+    'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 1000,
+    'MAX_REQUESTS': 3000,
     'CRAWL_TYPE': 'taxcomment',
     'COLLECTION': 'taxcomment-collection',
     'SOURCE': 'taxcomment',

@@ -11,7 +11,7 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180
 
     steps:
       - name: Checkout repository
@@ -55,9 +55,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
           # Crawler configuration for DoF crawl
-          MAX_REQUESTS_PER_CRAWL: 1000
+          MAX_REQUESTS_PER_CRAWL: 3000
           MAX_CONCURRENCY: 3
-          MAX_CRAWL_DEPTH: 3
+          MAX_CRAWL_DEPTH: 5
 
           # Collection and storage settings
           QDRANT_COLLECTION: dof-collection
