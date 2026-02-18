@@ -31,6 +31,8 @@ START_URLS = [
     'https://kpmg.com/ca/en/home/services/tax/tax-news-flash-canada.html',
     'https://www.doanegrantthornton.ca/insights/?tags=tax-services',
     'https://www.millerthomson.com/en/insights/corporate-tax/',
+        # crawlee.errors.SessionError: 
+        # Assuming the session is blocked based on HTTP status code 403
     'https://www.millerthomson.com/en/insights/?page=1&expertise_filter=1887',
     'https://financesofthenation.ca/articles/',
 ]
@@ -53,7 +55,7 @@ EXCLUDED_PATTERNS = [
 CRAWL_CONFIG = {
     'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 10000,
+    'MAX_REQUESTS': 5000,
     'CRAWL_TYPE': 'taxcomment',
     'COLLECTION': 'taxcomment-collection',
     'SOURCE': 'taxcomment',
