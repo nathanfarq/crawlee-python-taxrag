@@ -49,14 +49,14 @@ ALLOWED_DOMAINS = [
 
 # URL patterns to exclude (PDFs, XML, archived pages, etc.)
 EXCLUDED_PATTERNS = [
-    'https://www.canada.ca/en/revenue-agency/**',
+    'https://www.canada.ca/**',
 ]
 
 # Crawl settings for Provincial Tax scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 3,
+    'MAX_DEPTH': 2,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 5000,
+    'MAX_REQUESTS': 10000,
     'CRAWL_TYPE': 'provtax',
     'COLLECTION': 'provtax-collection',
     'SOURCE': 'provtax',
