@@ -55,7 +55,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
           # Crawler configuration for TaxLaw crawl
-          MAX_REQUESTS_PER_CRAWL: 3000
+          MAX_REQUESTS_PER_CRAWL: 5000
           MAX_CONCURRENCY: 3
           MAX_CRAWL_DEPTH: 3
 
