@@ -53,7 +53,7 @@ EXCLUDED_PATTERNS = [
 CRAWL_CONFIG = {
     'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 3000,
+    'MAX_REQUESTS': 10000,
     'CRAWL_TYPE': 'taxcomment',
     'COLLECTION': 'taxcomment-collection',
     'SOURCE': 'taxcomment',

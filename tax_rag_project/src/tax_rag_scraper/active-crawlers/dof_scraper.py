@@ -45,7 +45,7 @@ EXCLUDED_PATTERNS = ['https://www.canada.ca/en/services/**']
 CRAWL_CONFIG = {
     'MAX_DEPTH': 5,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 3000,
+    'MAX_REQUESTS': 10000,
     'CRAWL_TYPE': 'dof',
     'COLLECTION': 'dof-collection',
     'SOURCE': 'dof',
