@@ -55,9 +55,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
           # Crawler configuration for Federal Budget crawl
-          MAX_REQUESTS_PER_CRAWL: 1000
+          MAX_REQUESTS_PER_CRAWL: 2000
           MAX_CONCURRENCY: 3
-          MAX_CRAWL_DEPTH: 2
+          MAX_CRAWL_DEPTH: 3
 
           # Collection and storage settings
           QDRANT_COLLECTION: fedbudget-collection

@@ -38,9 +38,9 @@ EXCLUDED_PATTERNS = [
 
 # Crawl settings for TaxLaw scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 2,
+    'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 1000,
+    'MAX_REQUESTS': 3000,
     'CRAWL_TYPE': 'taxlaw',
     'COLLECTION': 'taxlaw-collection',
     'SOURCE': 'taxlaw',

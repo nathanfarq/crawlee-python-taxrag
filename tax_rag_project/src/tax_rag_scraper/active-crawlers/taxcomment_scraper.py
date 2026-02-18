@@ -1,10 +1,10 @@
-"""ITA scraper for Canadian Income Tax Act and regulations.
+"""Tax Comment Scraper.
 
-This scraper crawls Income Tax Act and regulations.
+This scraper crawls tax comment documents.
 It's designed to be self-contained and easily replicable for other scrapers.
 
 Usage:
-    python -m tax_rag_scraper.active-crawlers.ita_scraper
+    python -m tax_rag_scraper.active-crawlers.taxcomment_scraper
 """
 
 import asyncio
@@ -22,38 +22,41 @@ from tax_rag_scraper.crawlers.base_crawler import TaxDataCrawler
 logger = logging.getLogger(__name__)
 
 # ==============================================================================
-# SCRAPER CONFIGURATION
+# SCRAPER CONFIGURATION (TO BE UPDATED)
 # ==============================================================================
 
-# Start URLs for ITA crawl
+# Start URLs for Tax Comment crawl
 START_URLS = [
-    'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/index.html',
+    'https://www.pwc.com/ca/en/services/tax/publications/tax-insights.html',
+    'https://kpmg.com/ca/en/home/services/tax/tax-news-flash-canada.html',
+    'https://www.doanegrantthornton.ca/insights/?tags=tax-services',
+    'https://www.millerthomson.com/en/insights/corporate-tax/',
+    'https://www.millerthomson.com/en/insights/?page=1&expertise_filter=1887',
+    'https://financesofthenation.ca/articles/',
 ]
 
 # Allowed domains for this scraper
 ALLOWED_DOMAINS = [
-    'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/**',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/**',
+    'https://www.pwc.com/ca/en/services/tax/publications/tax-insights/**',
+    'https://kpmg.com/ca/en/home/insights/**',
+    'https://www.doanegrantthornton.ca/insights/**',
+    'https://www.millerthomson.com/en/insights/**',
+    'https://financesofthenation.ca/**',
 ]
 
-# URL patterns to exclude (PDFs, XML, FullText pages, etc.)
+# URL patterns to exclude (PDFs, XML, archived pages, etc.)
 EXCLUDED_PATTERNS = [
-    'https://laws-lois.justice.gc.ca/eng/acts/I-3.3/FullText.html',
-    'https://laws-lois.justice.gc.ca/eng/regulations/c.r.C.,_c._945/FullText.html',
-    'https://laws-lois.justice.gc.ca/**.xml',
-    'https://laws-lois.justice.gc.ca/**.pdf',
-    'https://laws-lois.justice.gc.ca/**/PITIndex.html',
+    # Excluded URLs
 ]
 
-# Crawl settings for ITA scraper
+# Crawl settings for Tax Comment scraper
 CRAWL_CONFIG = {
-    'MAX_DEPTH': 5,
+    'MAX_DEPTH': 3,
     'MAX_CONCURRENCY': 3,
-    'MAX_REQUESTS': 5000,
-    'CRAWL_TYPE': 'ita',
-    'COLLECTION': 'ita-collection',
-    'SOURCE': 'ita',
+    'MAX_REQUESTS': 3000,
+    'CRAWL_TYPE': 'taxcomment',
+    'COLLECTION': 'taxcomment-collection',
+    'SOURCE': 'taxcomment',
 }
 
 # ==============================================================================
@@ -62,7 +65,7 @@ CRAWL_CONFIG = {
 
 
 async def main() -> None:
-    """Run the ITA scraper."""
+    """Run the Tax Comment scraper."""
     # Load environment variables
     env_path = Path(__file__).parent.parent.parent.parent / 'tax_rag_project' / '.env'
     if env_path.exists():
@@ -103,6 +106,13 @@ async def main() -> None:
     logger.info('[OK] Qdrant Cloud URL: %s', qdrant_url)
     logger.info('[OK] OpenAI API key configured')
 
+    # Validate configuration
+    if not START_URLS or START_URLS[0].startswith('https://example.com'):
+        logger.error('\n[ERROR] START_URLS not configured')
+        logger.error('\nPlease update the START_URLS in taxcomment_scraper.py')
+        logger.error('Add the target URLs for tax comment resources')
+        sys.exit(1)
+
     # Configure settings with scraper overrides
     settings = Settings()
     settings.MAX_CRAWL_DEPTH = CRAWL_CONFIG['MAX_DEPTH']
@@ -111,8 +121,8 @@ async def main() -> None:
     settings.QDRANT_COLLECTION = CRAWL_CONFIG['COLLECTION']
     settings.QDRANT_SOURCE = CRAWL_CONFIG['SOURCE']
 
-    logger.info('\n[INFO] Starting ITA Scraper')
-    logger.info('[INFO] Target: Canadian Income Tax Act & Regulations')
+    logger.info('\n[INFO] Starting Tax Comment Scraper')
+    logger.info('[INFO] Target: Tax Comment Resources')
     logger.info('[INFO] Collection: %s', settings.QDRANT_COLLECTION)
     logger.info('[INFO] Max requests: %d', settings.MAX_REQUESTS_PER_CRAWL)
     logger.info('[INFO] Max depth: %d', settings.MAX_CRAWL_DEPTH)
@@ -134,7 +144,7 @@ async def main() -> None:
     # Run the crawler
     await crawler.run(START_URLS, crawl_type=CRAWL_CONFIG['CRAWL_TYPE'])
 
-    logger.info('\n[OK] ITA scraper complete.')
+    logger.info('\n[OK] Tax Comment scraper complete.')
     logger.info('[OK] Check storage/datasets/default/ for results.')
     logger.info('[OK] View your data in Qdrant Cloud: https://cloud.qdrant.io')
 
