@@ -108,7 +108,9 @@ class TaxDataQdrantClient:
                     f"Recreate the collection with distance=Cosine."
                 )
 
-            # 4. Validate sparse vector name and IDF modifier
+            # 4. Validate sparse vector name
+            # Note: modifier=IDF is not surfaced in the collection config API response,
+            # so only presence can be verified here.
             sparse_vectors = info.config.params.sparse_vectors
             if not sparse_vectors or self.sparse_vector_name not in sparse_vectors:
                 raise RuntimeError(
@@ -118,20 +120,10 @@ class TaxDataQdrantClient:
                     f"and modifier=IDF."
                 )
 
-            sparse_config = sparse_vectors[self.sparse_vector_name]
-            modifier = getattr(sparse_config.modifier, 'value', sparse_config.modifier)
-
-            if modifier != 'idf':
-                raise RuntimeError(
-                    f"Sparse vector '{self.sparse_vector_name}' has modifier='{modifier}', "
-                    f"but BM25 requires modifier='idf'. "
-                    f"Recreate the collection with modifier=IDF."
-                )
-
             logger.info(
                 f"Collection '{self.collection_name}' validated: "
                 f"dense '{self.dense_vector_name}' (size={self.vector_size}, cosine) ✓  "
-                f"sparse '{self.sparse_vector_name}' (IDF=true) ✓"
+                f"sparse '{self.sparse_vector_name}' ✓"
             )
 
         except RuntimeError:
