@@ -12,7 +12,7 @@ from crawlee.http_clients import HttpxHttpClient
 from tax_rag_scraper.config.settings import Settings
 from tax_rag_scraper.crawlers.site_router import SiteRouter
 from tax_rag_scraper.storage.qdrant_client import TaxDataQdrantClient
-from tax_rag_scraper.utils.embeddings import EmbeddingService, SparseEmbeddingService
+from tax_rag_scraper.utils.embeddings import EmbeddingService
 from tax_rag_scraper.utils.link_extractor import LinkExtractor
 from tax_rag_scraper.utils.robots import RobotsChecker
 from tax_rag_scraper.utils.stats_tracker import CrawlStats
@@ -84,12 +84,10 @@ class TaxDataCrawler:
             self.embedding_service = EmbeddingService(
                 model_name=self.settings.EMBEDDING_MODEL, api_key=self.settings.OPENAI_API_KEY
             )
-            self.sparse_embedding_service = SparseEmbeddingService()
             logger.info('✓ Qdrant Cloud integration ready')
         else:
             self.qdrant_client = None
             self.embedding_service = None
-            self.sparse_embedding_service = None
 
         # Batch storage for efficiency (NEW)
         self.document_batch = []
@@ -198,7 +196,6 @@ class TaxDataCrawler:
 
         # Type narrowing: these are guaranteed to be set when use_qdrant is True
         assert self.embedding_service is not None
-        assert self.sparse_embedding_service is not None
         assert self.qdrant_client is not None
 
         try:
@@ -206,24 +203,13 @@ class TaxDataCrawler:
 
             # Generate chunks with dense embeddings and metadata
             # Returns list of (chunk_text, dense_embedding, metadata) tuples
+            # BM25 sparse vectors are computed by Qdrant from the chunk text at upsert time
             dense_chunks = await self.embedding_service.embed_documents(self.document_batch)
 
             logger.info(f'Generated {len(dense_chunks)} chunks from {len(self.document_batch)} documents')
 
-            # Generate sparse embeddings for all chunk texts
-            chunk_texts = [chunk_text for chunk_text, _, _ in dense_chunks]
-            sparse_vectors = self.sparse_embedding_service.embed_texts(chunk_texts)
-
-            # Combine into 4-tuples: (chunk_text, dense_embedding, sparse_embedding, metadata)
-            hybrid_chunks = [
-                (chunk_text, dense_emb, sparse_emb, metadata)
-                for (chunk_text, dense_emb, metadata), sparse_emb in zip(
-                    dense_chunks, sparse_vectors, strict=True
-                )
-            ]
-
-            # Store hybrid chunks in Qdrant
-            await self.qdrant_client.store_documents(hybrid_chunks)
+            # Store chunks in Qdrant (BM25 sparse vector computed server-side from chunk_text)
+            await self.qdrant_client.store_documents(dense_chunks)
 
             logger.info('✓ Batch flushed successfully')
 

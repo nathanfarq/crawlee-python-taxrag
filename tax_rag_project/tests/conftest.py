@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from qdrant_client import QdrantClient
-from qdrant_client.models import SparseVector
 
 # Add the src directory to Python path so imports work
 src_path = Path(__file__).parent.parent / 'src'
@@ -118,15 +117,6 @@ def mock_dense_embedding() -> list[float]:
 
 
 @pytest.fixture
-def mock_sparse_vector() -> SparseVector:
-    """Provide a mock sparse vector."""
-    return SparseVector(
-        indices=[0, 5, 10, 15, 20],
-        values=[0.8, 0.6, 0.4, 0.3, 0.2]
-    )
-
-
-@pytest.fixture
 def mock_embedding_service(mock_openai_api_key, mock_dense_embedding):
     """Provide a mocked EmbeddingService."""
     from tax_rag_scraper.utils.embeddings import EmbeddingService
@@ -139,19 +129,6 @@ def mock_embedding_service(mock_openai_api_key, mock_dense_embedding):
     mock_response.usage.total_tokens = 100
 
     service.client.embeddings.create = AsyncMock(return_value=mock_response)
-
-    return service
-
-
-@pytest.fixture
-def mock_sparse_embedding_service(mock_sparse_vector):
-    """Provide a mocked SparseEmbeddingService."""
-    from tax_rag_scraper.utils.embeddings import SparseEmbeddingService
-
-    service = SparseEmbeddingService()
-
-    # Mock the fastembed model
-    service.model.embed = MagicMock(return_value=[mock_sparse_vector])
 
     return service
 
