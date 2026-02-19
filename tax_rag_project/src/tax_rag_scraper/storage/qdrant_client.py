@@ -55,15 +55,18 @@ class TaxDataQdrantClient:
         self._validate_collection_exists()
 
     def _validate_collection_exists(self) -> None:
-        """Validate that the collection exists in Qdrant Cloud.
+        """Validate that the collection and its vector configurations are correct.
 
-        Collections must be created manually in the Qdrant UI with the required
-        vector configuration before running scrapers.
+        Checks:
+        - Collection exists with the configured name
+        - Dense vector '{source}-dense' exists with size=1536 and Cosine distance
+        - Sparse vector '{source}-sparse' exists with modifier=IDF (required for BM25)
 
         Raises:
-            RuntimeError: If the collection does not exist.
+            RuntimeError: If any validation check fails.
         """
         try:
+            # 1. Confirm collection exists
             collections = self.client.get_collections().collections
             collection_names = [c.name for c in collections]
 
@@ -72,11 +75,64 @@ class TaxDataQdrantClient:
                     f"Collection '{self.collection_name}' does not exist in Qdrant Cloud.\n"
                     f"\n"
                     f"Please create it manually in the Qdrant UI (https://cloud.qdrant.io) with:\n"
-                    f"  - Dense vector: '{self.dense_vector_name}' (size={self.vector_size}, distance=Cosine)\n"
+                    f"  - Dense vector:  '{self.dense_vector_name}' (size={self.vector_size}, distance=Cosine)\n"
                     f"  - Sparse vector: '{self.sparse_vector_name}' (modifier=IDF, required for BM25)\n"
                 )
 
-            logger.info(f"Collection '{self.collection_name}' validated successfully")
+            # 2. Fetch full collection config to inspect vector settings
+            info = self.client.get_collection(self.collection_name)
+
+            # 3. Validate dense vector name, dimensions, and distance
+            vectors = info.config.params.vectors
+            if not isinstance(vectors, dict) or self.dense_vector_name not in vectors:
+                raise RuntimeError(
+                    f"Dense vector '{self.dense_vector_name}' not found in collection "
+                    f"'{self.collection_name}'. "
+                    f"Recreate the collection with a named dense vector '{self.dense_vector_name}'."
+                )
+
+            dense_config = vectors[self.dense_vector_name]
+
+            if dense_config.size != self.vector_size:
+                raise RuntimeError(
+                    f"Dense vector '{self.dense_vector_name}' has size={dense_config.size}, "
+                    f"but expected size={self.vector_size}. "
+                    f"Recreate the collection with the correct vector size."
+                )
+
+            distance_value = getattr(dense_config.distance, 'value', dense_config.distance)
+            if distance_value.lower() != 'cosine':
+                raise RuntimeError(
+                    f"Dense vector '{self.dense_vector_name}' has distance='{distance_value}', "
+                    f"but Cosine distance is required. "
+                    f"Recreate the collection with distance=Cosine."
+                )
+
+            # 4. Validate sparse vector name and IDF modifier
+            sparse_vectors = info.config.params.sparse_vectors
+            if not sparse_vectors or self.sparse_vector_name not in sparse_vectors:
+                raise RuntimeError(
+                    f"Sparse vector '{self.sparse_vector_name}' not found in collection "
+                    f"'{self.collection_name}'. "
+                    f"Recreate the collection with a named sparse vector '{self.sparse_vector_name}' "
+                    f"and modifier=IDF."
+                )
+
+            sparse_config = sparse_vectors[self.sparse_vector_name]
+            modifier = getattr(sparse_config.modifier, 'value', sparse_config.modifier)
+
+            if modifier != 'idf':
+                raise RuntimeError(
+                    f"Sparse vector '{self.sparse_vector_name}' has modifier='{modifier}', "
+                    f"but BM25 requires modifier='idf'. "
+                    f"Recreate the collection with modifier=IDF."
+                )
+
+            logger.info(
+                f"Collection '{self.collection_name}' validated: "
+                f"dense '{self.dense_vector_name}' (size={self.vector_size}, cosine) ✓  "
+                f"sparse '{self.sparse_vector_name}' (IDF=true) ✓"
+            )
 
         except RuntimeError:
             raise
