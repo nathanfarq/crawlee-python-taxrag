@@ -6,7 +6,7 @@ hybrid vector embeddings (dense + sparse).
 
 import pytest
 from unittest.mock import MagicMock, patch
-from qdrant_client.models import SparseVector, PointStruct
+from qdrant_client.models import Document, PointStruct
 from tax_rag_scraper.storage.qdrant_client import TaxDataQdrantClient
 
 
@@ -135,7 +135,6 @@ class TestTaxDataQdrantClientStorage:
             (
                 'Tax deduction information',
                 [0.1] * 1536,  # Dense embedding
-                SparseVector(indices=[1, 2, 3], values=[0.5, 0.3, 0.2]),  # Sparse
                 {
                     'chunk_index': 0,
                     'total_chunks': 1,
@@ -162,6 +161,8 @@ class TestTaxDataQdrantClientStorage:
         assert isinstance(point, PointStruct)
         assert 'cra-dense' in point.vector
         assert 'cra-sparse' in point.vector
+        assert isinstance(point.vector['cra-sparse'], Document)
+        assert point.vector['cra-sparse'].model == 'Qdrant/bm25'
         assert point.payload['chunk_text'] == 'Tax deduction information'
         assert point.payload['title'] == 'Tax Guide'
 
@@ -184,7 +185,6 @@ class TestTaxDataQdrantClientStorage:
             (
                 f'Chunk {i}',
                 [float(i)] * 1536,
-                SparseVector(indices=[i], values=[0.5]),
                 {
                     'chunk_index': i,
                     'total_chunks': 3,
@@ -234,7 +234,6 @@ class TestTaxDataQdrantClientStorage:
             (
                 'Content',
                 [0.1] * 1536,
-                SparseVector(indices=[1], values=[0.5]),
                 metadata,
             )
         ]
@@ -272,7 +271,6 @@ class TestTaxDataQdrantClientStorage:
             (
                 f'Chunk {i}',
                 [0.1] * 1536,
-                SparseVector(indices=[1], values=[0.5]),
                 {'chunk_index': i, 'total_chunks': 2},
             )
             for i in range(2)
@@ -320,7 +318,7 @@ class TestTaxDataQdrantClientSearch:
 
     @patch('tax_rag_scraper.storage.qdrant_client.QdrantClient')
     def test_search_hybrid(self, mock_qdrant_class, mock_qdrant_client) -> None:
-        """Test hybrid search with both dense and sparse vectors using Prefetch."""
+        """Test hybrid search with both dense and BM25 sparse vectors using Prefetch."""
         mock_qdrant_class.return_value = mock_qdrant_client
 
         client = TaxDataQdrantClient(
@@ -331,12 +329,11 @@ class TestTaxDataQdrantClientSearch:
         )
 
         query_vector = [0.5] * 1536
-        sparse_vector = SparseVector(indices=[1, 2], values=[0.5, 0.3])
 
         results = client.search(
             query_vector=query_vector,
-            sparse_vector=sparse_vector,
-            limit=5
+            query_text='tax deduction information',
+            limit=5,
         )
 
         # Verify prefetch search was used
@@ -344,6 +341,11 @@ class TestTaxDataQdrantClientSearch:
         assert 'prefetch' in call_args.kwargs
         prefetch = call_args.kwargs['prefetch']
         assert len(prefetch) == 2, "Should prefetch from both dense and sparse vectors"
+
+        # Verify the sparse prefetch uses BM25 Document
+        sparse_prefetch = next(p for p in prefetch if p.using == 'cra-sparse')
+        assert isinstance(sparse_prefetch.query, Document)
+        assert sparse_prefetch.query.model == 'Qdrant/bm25'
 
     @patch('tax_rag_scraper.storage.qdrant_client.QdrantClient')
     def test_search_limit_parameter(self, mock_qdrant_class, mock_qdrant_client) -> None:

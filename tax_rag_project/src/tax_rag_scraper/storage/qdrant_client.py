@@ -5,7 +5,7 @@ import uuid
 from typing import Any
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct, Prefetch, SparseVector
+from qdrant_client.models import Document, PointStruct, Prefetch
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class TaxDataQdrantClient:
                     f"\n"
                     f"Please create it manually in the Qdrant UI (https://cloud.qdrant.io) with:\n"
                     f"  - Dense vector: '{self.dense_vector_name}' (size={self.vector_size}, distance=Cosine)\n"
-                    f"  - Sparse vector: '{self.sparse_vector_name}'\n"
+                    f"  - Sparse vector: '{self.sparse_vector_name}' (modifier=IDF, required for BM25)\n"
                 )
 
             logger.info(f"Collection '{self.collection_name}' validated successfully")
@@ -85,25 +85,26 @@ class TaxDataQdrantClient:
             raise
 
     async def store_documents(
-        self, chunks: list[tuple[str, list[float], SparseVector, dict[str, Any]]]
+        self, chunks: list[tuple[str, list[float], dict[str, Any]]]
     ) -> None:
         """Store document chunks with hybrid embeddings in Qdrant.
 
         Each chunk is stored as a separate point with dense and sparse vectors.
+        BM25 sparse vectors are computed by Qdrant using the chunk text directly.
 
         Args:
-            chunks: List of tuples containing (chunk_text, dense_embedding, sparse_embedding, metadata)
+            chunks: List of tuples containing (chunk_text, dense_embedding, metadata)
         """
         try:
             points = []
-            for chunk_text, dense_embedding, sparse_embedding, metadata in chunks:
+            for chunk_text, dense_embedding, metadata in chunks:
                 point_id = str(uuid.uuid4())
 
                 point = PointStruct(
                     id=point_id,
                     vector={
                         self.dense_vector_name: dense_embedding,
-                        self.sparse_vector_name: sparse_embedding,
+                        self.sparse_vector_name: Document(text=chunk_text, model='Qdrant/bm25'),
                     },
                     payload={
                         'chunk_text': chunk_text,
@@ -132,21 +133,21 @@ class TaxDataQdrantClient:
     def search(
         self,
         query_vector: list[float],
-        sparse_vector: SparseVector | None = None,
+        query_text: str | None = None,
         limit: int = 5,
     ) -> list[Any]:
         """Search for similar documents using hybrid search.
 
         Args:
             query_vector: Dense embedding vector for the search query
-            sparse_vector: Sparse embedding vector for keyword matching
+            query_text: Query text for BM25 sparse keyword matching
             limit: Maximum number of results to return
 
         Returns:
             List of search results with scores and payloads
         """
         try:
-            if sparse_vector:
+            if query_text:
                 # Hybrid search with prefetch
                 results = self.client.query_points(
                     collection_name=self.collection_name,
@@ -157,7 +158,7 @@ class TaxDataQdrantClient:
                             limit=limit * 2,
                         ),
                         Prefetch(
-                            query=sparse_vector,
+                            query=Document(text=query_text, model='Qdrant/bm25'),
                             using=self.sparse_vector_name,
                             limit=limit * 2,
                         ),
