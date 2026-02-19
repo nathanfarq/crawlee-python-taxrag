@@ -29,17 +29,20 @@ logger = logging.getLogger(__name__)
 START_URLS = [
     'https://www.canada.ca/en/revenue-agency/services/forms-publications.html',
     'https://www.canada.ca/en/revenue-agency/services/tax/technical-information.html',
+    'https://www.canada.ca/en/services/taxes.html',
 ]
 
 # Allowed domains for this scraper
 ALLOWED_DOMAINS = [
     'https://www.canada.ca/en/revenue-agency/services/tax/technical-information/**',
     'https://www.canada.ca/en/revenue-agency/services/forms-publications/**',
+    'https://www.canada.ca/en/services/taxes/**',
+    'https://www.canada.ca/en/revenue-agency/**'
 ]
 
 # URL patterns to exclude (PDFs, XML, FullText pages, etc.)
 EXCLUDED_PATTERNS = [
-    'https://www.canada.ca/en/services/**',
+    
 ]
 
 # Crawl settings for CRA scraper
