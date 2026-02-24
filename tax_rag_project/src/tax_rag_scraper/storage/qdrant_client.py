@@ -1,5 +1,6 @@
 """Qdrant Cloud client for storing tax documentation with hybrid vector embeddings."""
 
+import hashlib
 import logging
 import uuid
 from typing import Any
@@ -146,7 +147,9 @@ class TaxDataQdrantClient:
         try:
             points = []
             for chunk_text, dense_embedding, metadata in chunks:
-                point_id = str(uuid.uuid4())
+                url = metadata.get('parent_url', '')
+                chunk_idx = metadata.get('chunk_index', 0)
+                point_id = str(uuid.UUID(hashlib.md5(f'{url}::{chunk_idx}'.encode()).hexdigest()))
 
                 point = PointStruct(
                     id=point_id,
