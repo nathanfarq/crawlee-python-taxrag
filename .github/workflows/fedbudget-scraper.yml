@@ -67,7 +67,7 @@ jobs:
 
           # Rate limiting (be respectful)
           MAX_REQUESTS_PER_MINUTE: 60
-          MIN_REQUEST_DELAY: 1.0
+          MIN_REQUEST_DELAY: 2.0
           MAX_REQUEST_DELAY: 3.0
         run: |
           python -m tax_rag_scraper.active-crawlers.fedbudget_scraper
