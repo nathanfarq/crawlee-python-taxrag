@@ -12,6 +12,10 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    strategy:
+      matrix:
+        shard: [1, 2, 3]
+      max-parallel: 3
 
     steps:
       - name: Checkout repository
@@ -44,7 +48,7 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Run CRA scraper
+      - name: Run CRA scraper (shard ${{ matrix.shard }})
         working-directory: .
         env:
           # Qdrant Cloud credentials
@@ -70,13 +74,15 @@ jobs:
           MIN_REQUEST_DELAY: 2.0
           MAX_REQUEST_DELAY: 3.0
         run: |
-          python -m tax_rag_scraper.active-crawlers.cra_scraper
+          python -m tax_rag_scraper.active-crawlers.cra_scraper \
+            --shard ${{ matrix.shard }} \
+            --total-shards 3
 
       - name: Upload metrics artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cra-scrape-metrics-${{ github.run_number }}
+          name: cra-scrape-metrics-${{ github.run_number }}-shard-${{ matrix.shard }}
           path: tax_rag_project/storage/datasets/*/metrics.jsonl
           retention-days: 90
           if-no-files-found: warn
@@ -85,7 +91,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cra-scrape-results-${{ github.run_number }}
+          name: cra-scrape-results-${{ github.run_number }}-shard-${{ matrix.shard }}
           path: tax_rag_project/storage/datasets/
           retention-days: 90
           if-no-files-found: warn

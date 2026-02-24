@@ -7,6 +7,7 @@ Usage:
     python -m tax_rag_scraper.active-crawlers.cra_scraper
 """
 
+import argparse
 import asyncio
 import logging
 import os
@@ -60,7 +61,7 @@ CRAWL_CONFIG = {
 # ==============================================================================
 
 
-async def main() -> None:
+async def main(shard: int = 0, total_shards: int = 1) -> None:
     """Run the CRA scraper."""
     # Load environment variables
     env_path = Path(__file__).parent.parent.parent.parent / 'tax_rag_project' / '.env'
@@ -102,11 +103,15 @@ async def main() -> None:
     logger.info('[OK] Qdrant Cloud URL: %s', qdrant_url)
     logger.info('[OK] OpenAI API key configured')
 
-    # Validate configuration
-    if not START_URLS:
-        logger.error('\n[ERROR] START_URLS not configured')
-        logger.error('\nPlease update the START_URLS in cra_scraper.py')
-        logger.error('Add the target URLs for CRA forms, guides, and publications')
+    # Compute active URLs for this shard
+    if total_shards > 1:
+        active_urls = START_URLS[shard - 1::total_shards]
+        logger.info('[INFO] Shard %d/%d: %d URL(s)', shard, total_shards, len(active_urls))
+    else:
+        active_urls = START_URLS
+
+    if not active_urls:
+        logger.error('\n[ERROR] No URLs assigned to shard %d (total_shards=%d)', shard, total_shards)
         sys.exit(1)
 
     # Configure settings with scraper overrides
@@ -124,7 +129,7 @@ async def main() -> None:
     logger.info('[INFO] Max depth: %d', settings.MAX_CRAWL_DEPTH)
     logger.info('[INFO] Concurrency: %d', settings.MAX_CONCURRENCY)
     logger.info('[INFO] Start URLs:')
-    for url in START_URLS:
+    for url in active_urls:
         logger.info('  - %s', url)
     logger.info('')
 
@@ -138,7 +143,7 @@ async def main() -> None:
     )
 
     # Run the crawler
-    await crawler.run(START_URLS, crawl_type=CRAWL_CONFIG['CRAWL_TYPE'])
+    await crawler.run(active_urls, crawl_type=CRAWL_CONFIG['CRAWL_TYPE'])
 
     logger.info('\n[OK] CRA scraper complete.')
     logger.info('[OK] Check storage/datasets/default/ for results.')
@@ -152,5 +157,9 @@ if __name__ == '__main__':
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     )
 
-    # Run the scraper
-    asyncio.run(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--shard', type=int, default=0)
+    parser.add_argument('--total-shards', type=int, default=1)
+    args = parser.parse_args()
+
+    asyncio.run(main(shard=args.shard, total_shards=args.total_shards))
