@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
+import httpx
 from crawlee import Request
 from crawlee._autoscaling.autoscaled_pool import ConcurrencySettings
 from crawlee.crawlers import BeautifulSoupCrawler
@@ -95,7 +96,10 @@ class TaxDataCrawler:
 
         # Create HTTP client with custom headers and user-agent rotation
         http_client = HttpxHttpClient(
-            http2=False,  # Disable HTTP/2
+            limits=httpx.Limits(
+                max_connections=10,
+                max_keepalive_connections=0,  # Force fresh H2 connection per request
+            ),
             headers={
                 'User-Agent': get_random_user_agent(),
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
