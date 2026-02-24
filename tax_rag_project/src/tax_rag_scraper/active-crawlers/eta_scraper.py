@@ -49,7 +49,7 @@ EXCLUDED_PATTERNS = [
 # Crawl settings for ETA scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 5,
-    'MAX_CONCURRENCY': 3,
+    'MAX_CONCURRENCY': 2,
     'MAX_REQUESTS': 10000,
     'CRAWL_TYPE': 'eta',
     'COLLECTION': 'eta-collection',

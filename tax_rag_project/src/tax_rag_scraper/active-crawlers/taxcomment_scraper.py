@@ -54,7 +54,7 @@ EXCLUDED_PATTERNS = [
 # Crawl settings for Tax Comment scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 3,
-    'MAX_CONCURRENCY': 3,
+    'MAX_CONCURRENCY': 2,
     'MAX_REQUESTS': 10000,
     'CRAWL_TYPE': 'taxcomment',
     'COLLECTION': 'taxcomment-collection',

@@ -40,7 +40,7 @@ EXCLUDED_PATTERNS = ['https://budget.canada.ca/**.pdf', 'https://budget.canada.c
 # Crawl settings for Federal Budget scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 3,
-    'MAX_CONCURRENCY': 3,
+    'MAX_CONCURRENCY': 2,
     'MAX_REQUESTS': 1000,
     'CRAWL_TYPE': 'fedbudget',
     'COLLECTION': 'fedbudget-collection',

@@ -49,7 +49,7 @@ EXCLUDED_PATTERNS = [
 # Crawl settings for ITA scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 5,
-    'MAX_CONCURRENCY': 3,
+    'MAX_CONCURRENCY': 2,
     'MAX_REQUESTS': 10000,
     'CRAWL_TYPE': 'ita',
     'COLLECTION': 'ita-collection',

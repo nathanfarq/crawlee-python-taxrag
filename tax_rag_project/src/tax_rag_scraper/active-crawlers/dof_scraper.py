@@ -44,7 +44,7 @@ EXCLUDED_PATTERNS = ['https://www.canada.ca/en/services/**']
 # Crawl settings for Department of Finance scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 5,
-    'MAX_CONCURRENCY': 3,
+    'MAX_CONCURRENCY': 2,
     'MAX_REQUESTS': 15000,
     'CRAWL_TYPE': 'dof',
     'COLLECTION': 'dof-collection',
