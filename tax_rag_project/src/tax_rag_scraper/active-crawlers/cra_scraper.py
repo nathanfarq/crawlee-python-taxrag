@@ -47,7 +47,7 @@ EXCLUDED_PATTERNS = [
 # Crawl settings for CRA scraper
 CRAWL_CONFIG = {
     'MAX_DEPTH': 5,
-    'MAX_CONCURRENCY': 3,
+    'MAX_CONCURRENCY': 2,
     'MAX_REQUESTS': 15000,
     'CRAWL_TYPE': 'cra',
     'COLLECTION': 'cra-collection',

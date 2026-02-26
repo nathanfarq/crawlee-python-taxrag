@@ -56,7 +56,7 @@ jobs:
 
           # Crawler configuration for DoF crawl
           MAX_REQUESTS_PER_CRAWL: 15000
-          MAX_CONCURRENCY: 3
+          MAX_CONCURRENCY: 2
           MAX_CRAWL_DEPTH: 5
 
           # Collection and storage settings
