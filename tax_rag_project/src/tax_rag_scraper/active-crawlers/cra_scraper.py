@@ -29,7 +29,6 @@ logger = logging.getLogger(__name__)
 START_URLS = [
     'https://www.canada.ca/en/revenue-agency/services/forms-publications.html',
     'https://www.canada.ca/en/revenue-agency/services/tax/technical-information.html',
-    'https://www.canada.ca/en/services/taxes.html',
 ]
 
 # Allowed domains for this scraper
